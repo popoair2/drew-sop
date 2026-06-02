@@ -1,5 +1,5 @@
 /**
- * app.js — Main application logic
+ * app.js — Main application logic (Supabase-backed)
  */
 
 const App = {
@@ -9,17 +9,26 @@ const App = {
   snapshots: [],
   apiKey: '',
   refreshInterval: null,
-  linePeriod: 'month', // day | month | year
+  linePeriod: 'month',
   isLoading: false,
   fetchErrors: [],
 
   /** Initialize app */
   async init() {
-    this.assets = Storage.getAssets();
-    this.categories = Storage.getCategories();
-    this.prices = Storage.getPrices();
-    this.snapshots = Storage.getSnapshots();
     this.apiKey = Storage.getApiKey();
+
+    // Load from Supabase (with localStorage fallback)
+    this.assets = await Storage.getAssets();
+    this.categories = await Storage.getCategories();
+    this.prices = Storage.getPrices();
+    this.snapshots = await Storage.getSnapshots();
+
+    // Migrate any existing local data to Supabase
+    await Storage.migrateLocalToSupabase();
+
+    // Re-read after migration
+    this.assets = await Storage.getAssets();
+    this.categories = await Storage.getCategories();
 
     this.bindEvents();
     this.render();
@@ -44,8 +53,7 @@ const App = {
 
     document.getElementById('btnClearData').addEventListener('click', () => {
       if (confirm('確定要清除所有數據？此操作無法復原。')) {
-        Storage.clearAll();
-        location.reload();
+        Storage.clearAll().then(() => location.reload());
       }
     });
 
@@ -82,7 +90,6 @@ const App = {
   // VALUE CALCULATIONS
   // =============================================
 
-  /** Get stored forex rates (for non-API conversions) */
   getForexRates() {
     const rates = {};
     rates['HKD_HKD'] = 1;
@@ -104,7 +111,6 @@ const App = {
     return rates;
   },
 
-  /** Convert price to HKD */
   toHKD(price, currency, forexInfo) {
     if (currency === 'HKD') return price;
     const rates = this.getForexRates();
@@ -114,7 +120,6 @@ const App = {
     return price;
   },
 
-  /** Calculate total value in HKD */
   calcTotalValue() {
     let total = 0;
     for (const asset of this.assets) {
@@ -130,23 +135,19 @@ const App = {
   // RENDERERS
   // =============================================
 
-  /** Render total value in header */
   renderTotalValue() {
     const total = this.calcTotalValue();
     const el = document.getElementById('totalValue');
     el.textContent = this.assets.length > 0 ? Utils.fmtHKD(total) : '—';
   },
 
-  /** Render day/month/year change bar */
   renderChangeBar() {
     const current = this.calcTotalValue();
-
     const periods = [
       { id: 'changeDay', days: 1 },
       { id: 'changeMonth', days: 30 },
       { id: 'changeYear', days: 365 }
     ];
-
     for (const p of periods) {
       const el = document.getElementById(p.id);
       const snap = Storage.getSnapshotDaysAgo(p.days);
@@ -160,25 +161,20 @@ const App = {
         el.className = 'change-value';
       }
     }
-
     const now = new Date();
     document.getElementById('lastUpdate').textContent =
       `更新: ${now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })}`;
   },
 
-  /** Render asset list grouped by category */
   renderAssetList() {
     const container = document.getElementById('assetList');
-
     if (this.assets.length === 0) {
       container.innerHTML = '<div class="empty-state">尚未新增任何資產<br>按「新增資產」開始</div>';
       return;
     }
-
     const grouped = {};
     this.categories.forEach(cat => { grouped[cat.id] = { ...cat, assets: [] }; });
     const uncategorized = { id: null, name: '未分類', color: '#888888', assets: [] };
-
     this.assets.forEach(asset => {
       if (grouped[asset.category]) {
         grouped[asset.category].assets.push(asset);
@@ -186,17 +182,14 @@ const App = {
         uncategorized.assets.push(asset);
       }
     });
-
     let html = '';
     const groups = [...Object.values(grouped), uncategorized].filter(g => g.assets.length > 0);
-
     for (const group of groups) {
       let groupTotal = 0;
       group.assets.forEach(a => {
         const p = this.prices[a.id];
         if (p) groupTotal += this.toHKD(p.price, p.currency, p) * (a.quantity || 0);
       });
-
       html += `
         <div class="category-section">
           <div class="category-header">
@@ -206,12 +199,7 @@ const App = {
           <table class="asset-table">
             <thead>
               <tr>
-                <th>代號</th>
-                <th>名稱</th>
-                <th>數量</th>
-                <th>價格</th>
-                <th>價值 (HKD)</th>
-                <th></th>
+                <th>代號</th><th>名稱</th><th>數量</th><th>價格</th><th>價值 (HKD)</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -239,11 +227,9 @@ const App = {
         </div>
       `;
     }
-
     container.innerHTML = html;
   },
 
-  /** Render pie chart */
   renderPieChart() {
     if (this.assets.length === 0) {
       if (Charts.pieChart) { Charts.pieChart.destroy(); Charts.pieChart = null; }
@@ -251,25 +237,17 @@ const App = {
       if (legendEl) legendEl.innerHTML = '';
       return;
     }
-
     const catValues = {};
     this.categories.forEach(cat => { catValues[cat.id] = { name: cat.name, color: cat.color, value: 0 }; });
-
     this.assets.forEach(asset => {
       const p = this.prices[asset.id];
       if (!p) return;
       const priceHKD = this.toHKD(p.price, p.currency, p);
       const value = priceHKD * (asset.quantity || 0);
-      if (catValues[asset.category]) {
-        catValues[asset.category].value += value;
-      }
+      if (catValues[asset.category]) catValues[asset.category].value += value;
     });
-
     const data = Object.values(catValues).filter(c => c.value > 0);
-    if (data.length > 0) {
-      Charts.renderPie('pieChart', data);
-    }
-
+    if (data.length > 0) Charts.renderPie('pieChart', data);
     const legendEl = document.getElementById('categoryLegend');
     if (legendEl) {
       legendEl.innerHTML = data.map(c => `
@@ -281,12 +259,10 @@ const App = {
     }
   },
 
-  /** Render line chart */
   renderLineChart() {
     Charts.renderLine('lineChart', this.snapshots, this.linePeriod);
   },
 
-  /** Set line chart period */
   setPeriod(period) {
     this.linePeriod = period;
     document.querySelectorAll('.period-btn').forEach(btn => {
@@ -295,7 +271,6 @@ const App = {
     this.renderLineChart();
   },
 
-  /** Render fetch errors */
   renderErrors() {
     let errorBar = document.getElementById('errorBar');
     if (!errorBar) {
@@ -305,33 +280,21 @@ const App = {
       const changeBar = document.getElementById('changeBar');
       changeBar?.insertAdjacentElement('afterend', errorBar);
     }
-
     if (this.fetchErrors.length === 0 && !this.isLoading) {
       errorBar.innerHTML = '';
       errorBar.style.display = 'none';
       return;
     }
-
     errorBar.style.display = 'block';
-
     if (this.isLoading) {
-      errorBar.innerHTML = `
-        <span class="loading-dots"><span></span><span></span><span></span></span>
-        <span class="error-text">更新緊價格...</span>
-      `;
+      errorBar.innerHTML = `<span class="loading-dots"><span></span><span></span><span></span></span><span class="error-text">更新緊價格...</span>`;
       return;
     }
-
     if (this.fetchErrors.length > 0) {
-      errorBar.innerHTML = `
-        <span class="error-icon">⚠</span>
-        <span class="error-text">部分資產更新失敗: ${this.fetchErrors.map(e => e.symbol).join(', ')}</span>
-        <button class="btn-dismiss" onclick="App.dismissErrors()">✕</button>
-      `;
+      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">部分資產更新失敗: ${this.fetchErrors.map(e => e.symbol).join(', ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">✕</button>`;
     }
   },
 
-  /** Dismiss error bar */
   dismissErrors() {
     this.fetchErrors = [];
     this.renderErrors();
@@ -341,7 +304,6 @@ const App = {
   // PRICE REFRESH
   // =============================================
 
-  /** Refresh all prices */
   async refreshPrices() {
     if (!this.apiKey) return;
     if (this.assets.length === 0) return;
@@ -367,8 +329,8 @@ const App = {
           totalHKD += valueHKD;
         }
       });
-      Storage.saveDailySnapshot(totalHKD, assetValues);
-      this.snapshots = Storage.getSnapshots();
+      await Storage.saveDailySnapshot(totalHKD, assetValues);
+      this.snapshots = await Storage.getSnapshots();
     } catch (err) {
       this.fetchErrors.push({ symbol: 'ALL', name: '', error: err.message });
     }
@@ -377,7 +339,6 @@ const App = {
     this.render();
   },
 
-  /** Start auto-refresh every 5 minutes */
   startAutoRefresh() {
     if (this.refreshInterval) clearInterval(this.refreshInterval);
     this.refreshInterval = setInterval(() => this.refreshPrices(), 5 * 60 * 1000);
@@ -395,16 +356,13 @@ const App = {
     document.getElementById(id).classList.remove('active');
   },
 
-  /** Open modal for add/edit asset */
   openAssetModal(asset = null) {
     const form = document.getElementById('formAsset');
     form.reset();
-
     const catSelect = document.getElementById('inputCategory');
     catSelect.innerHTML = this.categories.map(c =>
       `<option value="${c.id}">${c.name}</option>`
     ).join('');
-
     if (asset) {
       document.getElementById('modalAssetTitle').textContent = '編輯資產';
       document.getElementById('inputSymbol').value = asset.symbol;
@@ -418,15 +376,12 @@ const App = {
       document.getElementById('modalAssetTitle').textContent = '新增資產';
       delete form.dataset.editId;
     }
-
     this.showModal('modalAsset');
   },
 
-  /** Save asset from form */
-  saveAsset() {
+  async saveAsset() {
     const form = document.getElementById('formAsset');
     const editId = form.dataset.editId;
-
     const asset = {
       symbol: document.getElementById('inputSymbol').value.trim().toUpperCase(),
       name: document.getElementById('inputName').value.trim(),
@@ -435,32 +390,31 @@ const App = {
       quantity: parseFloat(document.getElementById('inputQuantity').value) || 0,
       currency: document.getElementById('inputCurrency').value
     };
-
     if (editId) {
-      Storage.updateAsset(editId, asset);
+      await Storage.updateAsset(editId, asset);
     } else {
-      Storage.addAsset(asset);
+      await Storage.addAsset(asset);
     }
-
-    this.assets = Storage.getAssets();
+    this.assets = await Storage.getAssets();
     this.closeModal('modalAsset');
     this.render();
   },
 
-  editAsset(id) {
+  async editAsset(id) {
     const asset = this.assets.find(a => a.id === id);
     if (asset) this.openAssetModal(asset);
   },
 
-  deleteAsset(id) {
+  async deleteAsset(id) {
     if (confirm('確定要刪除此資產？')) {
-      Storage.deleteAsset(id);
-      this.assets = Storage.getAssets();
+      await Storage.deleteAsset(id);
+      this.assets = await Storage.getAssets();
       this.render();
     }
   },
 
-  openCategoryModal() {
+  async openCategoryModal() {
+    this.categories = await Storage.getCategories();
     this.renderCategoryList();
     this.showModal('modalCategories');
   },
@@ -476,19 +430,19 @@ const App = {
     `).join('');
   },
 
-  addCategory() {
+  async addCategory() {
     const name = document.getElementById('inputCategoryName').value.trim();
     const color = document.getElementById('inputCategoryColor').value;
     if (!name) return;
-    Storage.addCategory(name, color);
-    this.categories = Storage.getCategories();
+    await Storage.addCategory(name, color);
+    this.categories = await Storage.getCategories();
     document.getElementById('inputCategoryName').value = '';
     this.renderCategoryList();
   },
 
-  deleteCategory(id) {
-    if (Storage.deleteCategory(id)) {
-      this.categories = Storage.getCategories();
+  async deleteCategory(id) {
+    if (await Storage.deleteCategory(id)) {
+      this.categories = await Storage.getCategories();
       this.renderCategoryList();
     } else {
       alert('無法刪除此分類，因為有資產正在使用。');
