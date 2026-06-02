@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drew-Sop 資產 Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">DREW-SOP</h1>
+      <div class="header-right">
+        <div class="total-value-card">
+          <span class="label">總資產價值</span>
+          <span class="value" id="totalValue">—</span>
+        </div>
+        <button class="btn-pill" id="btnAddAsset">+ 新增資產</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CHANGE BAR -->
+  <section class="change-bar" id="changeBar">
+    <div class="change-item">
+      <span class="change-label">日</span>
+      <span class="change-value" id="changeDay">—</span>
+    </div>
+    <div class="change-item">
+      <span class="change-label">月</span>
+      <span class="change-value" id="changeMonth">—</span>
+    </div>
+    <div class="change-item">
+      <span class="change-label">年</span>
+      <span class="change-value" id="changeYear">—</span>
+    </div>
+    <div class="last-update">
+      <span id="lastUpdate">未更新</span>
+    </div>
+  </section>
+
+  <!-- BENTO GRID -->
+  <main class="bento-grid">
+
+    <!-- PIE CHART CARD -->
+    <div class="bento-card card-pie">
+      <h2 class="card-title">持倉分佈</h2>
+      <div class="chart-container">
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div class="category-legend" id="categoryLegend"></div>
+    </div>
+
+    <!-- LINE CHART CARD -->
+    <div class="bento-card card-line">
+      <h2 class="card-title">資產走勢</h2>
+      <div class="chart-container">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ASSET LIST BY CATEGORY -->
+    <div class="bento-card card-assets" id="assetListCard">
+      <h2 class="card-title">持倉明細</h2>
+      <div id="assetList"></div>
+    </div>
+
+    <!-- SETTINGS CARD -->
+    <div class="bento-card card-settings">
+      <h2 class="card-title">設定</h2>
+      <div class="settings-group">
+        <button class="btn-pill" id="btnManageCategories">管理分類</button>
+        <button class="btn-pill" id="btnRefreshPrices">即時更新</button>
+        <button class="btn-pill btn-danger" id="btnClearData">清除所有數據</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD/EDIT ASSET -->
+  <div class="modal-overlay" id="modalAsset">
+    <div class="modal">
+      <h2 class="modal-title" id="modalAssetTitle">新增資產</h2>
+      <form id="formAsset">
+        <div class="form-group">
+          <label>資產代號</label>
+          <input type="text" id="inputSymbol" placeholder="例：AAPL, 0700.HK, BTC" required>
+        </div>
+        <div class="form-group">
+          <label>資產名稱</label>
+          <input type="text" id="inputName" placeholder="例：Apple Inc." required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>類型</label>
+            <select id="inputType">
+              <option value="us_stock">美股</option>
+              <option value="hk_stock">港股</option>
+              <option value="etf">ETF</option>
+              <option value="crypto">加密貨幣</option>
+              <option value="forex">外匯</option>
+              <option value="cash">貨幣市場基金</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>分類</label>
+            <select id="inputCategory"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>持倉數量</label>
+            <input type="number" id="inputQuantity" step="any" placeholder="0" required>
+          </div>
+          <div class="form-group">
+            <label>貨幣</label>
+            <select id="inputCurrency">
+              <option value="USD">USD</option>
+              <option value="HKD">HKD</option>
+              <option value="JPY">JPY</option>
+              <option value="EUR">EUR</option>
+              <option value="CNY">CNY</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-pill" id="btnCancelAsset">取消</button>
+          <button type="submit" class="btn-pill btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE CATEGORIES -->
+  <div class="modal-overlay" id="modalCategories">
+    <div class="modal">
+      <h2 class="modal-title">管理分類</h2>
+      <div id="categoryList"></div>
+      <form id="formAddCategory" class="form-inline">
+        <input type="text" id="inputCategoryName" placeholder="新分類名稱" required>
+        <input type="color" id="inputCategoryColor" value="#B8E986">
+        <button type="submit" class="btn-pill btn-primary">加入</button>
+      </form>
+      <div class="form-actions">
+        <button class="btn-pill" id="btnCloseCategories">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: API KEY -->
+  <div class="modal-overlay" id="modalApiKey">
+    <div class="modal">
+      <h2 class="modal-title">設定 API Key</h2>
+      <p class="modal-desc">請輸入你嘅 Finnhub API Key（免費註冊：finnhub.io）</p>
+      <form id="formApiKey">
+        <div class="form-group">
+          <input type="text" id="inputApiKey" placeholder="Finnhub API Key" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-pill btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
