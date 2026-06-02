@@ -596,3 +596,75 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- ERROR BAR --- */
+.error-bar {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-orange);
+  color: var(--black);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gray-dark);
+}
+
+.error-bar .error-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.error-bar .error-text {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-bar .btn-dismiss {
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  background: none;
+  border: none;
+  color: var(--black);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.error-bar .btn-dismiss:hover {
+  opacity: 0.6;
+}
+
+/* --- PERIOD SWITCHER --- */
+.period-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.period-btn {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--black);
+  background: transparent;
+  color: var(--black);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.period-btn.active {
+  background: var(--black);
+  color: var(--white);
+}
+
+.period-btn:hover:not(.active) {
+  background: rgba(0,0,0,0.1);
+}
+

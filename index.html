@@ -58,6 +58,11 @@
     <!-- LINE CHART CARD -->
     <div class="bento-card card-line">
       <h2 class="card-title">資產走勢</h2>
+      <div class="period-switcher">
+        <button class="period-btn" data-period="day" onclick="App.setPeriod('day')">日</button>
+        <button class="period-btn active" data-period="month" onclick="App.setPeriod('month')">月</button>
+        <button class="period-btn" data-period="year" onclick="App.setPeriod('year')">年</button>
+      </div>
       <div class="chart-container">
         <canvas id="lineChart"></canvas>
       </div>
