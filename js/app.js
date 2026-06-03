@@ -15,7 +15,7 @@ const App = {
 
   /** Initialize app */
   async init() {
-    // No API key needed — using Yahoo Finance (free, no key)
+    // No API key needed — using Twelve Data (free, 800 calls/day)
 
     // Load from Supabase (with localStorage fallback)
     this.assets = await Storage.getAssets();

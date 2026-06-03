@@ -1,47 +1,49 @@
 /**
- * api.js — Price fetching from Yahoo Finance + CoinGecko
+ * api.js — Price fetching from Twelve Data + CoinGecko
  *
- * Yahoo Finance: free, no API key needed
- *   Search: https://query1.finance.yahoo.com/v1/finance/search?q=XXX
- *   Quote:  https://query1.finance.yahoo.com/v8/finance/chart/SYMBOL?range=1d&interval=1d
+ * Twelve Data: free tier, 800 calls/day, 8 calls/min
+ *   Search:  https://api.twelvedata.com/symbol_search?symbol=XXX&apikey=KEY
+ *   Quote:  https://api.twelvedata.com/price?symbol=XXX&apikey=KEY
+ *   Batch:  https://api.twelvedata.com/time_series?symbol=A,B,C&interval=1day&apikey=KEY
  *
- * CoinGecko: free, no key, for crypto
+ * CoinGecko: free, no key, for crypto only (no CORS issues)
+ * ExchangeRate-API: free, no key, for forex/cash rates (no CORS issues)
  */
 
 const API = {
-  YAHOO_BASE: 'https://query1.finance.yahoo.com',
+  TWELVE_DATA_KEY: 'ede47da796864307a6805ed331eb6bcd',
+  TWELVE_BASE: 'https://api.twelvedata.com',
 
-  async yahooFetch(path) {
-    const url = `${this.YAHOO_BASE}${path}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!res.ok) throw new Error(`Yahoo HTTP ${res.status}`);
+  async tdFetch(path, params = {}) {
+    const url = new URL(`${this.TWELVE_BASE}${path}`);
+    url.searchParams.set('apikey', this.TWELVE_DATA_KEY);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, v);
+    }
+    const res = await fetch(url.toString(), { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(`Twelve Data HTTP ${res.status}`);
     return res.json();
   },
 
-  /** Search Yahoo Finance for symbols */
-  async searchYahoo(query) {
+  /** Search Twelve Data for symbols (stocks + ETFs) */
+  async searchTwelve(query) {
     if (!query || query.length < 1) return [];
     try {
-      const data = await this.yahooFetch(`/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`);
-      const quotes = data?.quotes || [];
-      return quotes.slice(0, 12).map(q => {
-        const sym = q.symbol || '';
-        const isHK = sym.endsWith('.HK');
-        const isETF = (q.quoteType || '').toUpperCase() === 'ETF' || (q.shortname || '').toUpperCase().includes('ETF');
-        const isCrypto = (q.quoteType || '').toUpperCase() === 'CRYPTOCURRENCY' || sym.includes('-');
-        let type = 'us_stock';
-        if (isCrypto) type = 'crypto';
-        else if (isHK && isETF) type = 'hk_etf';
-        else if (isHK) type = 'hk_stock';
-        else if (isETF) type = 'etf';
-        return {
-          symbol: sym,
-          name: q.shortname || q.longname || sym,
-          type
-        };
+      const data = await this.tdFetch('/symbol_search', { symbol: query });
+      const results = data?.data || data?.result || (Array.isArray(data) ? data : []);
+      return results.slice(0, 12).map(r => {
+        const sym = r.symbol || r.ticker || '';
+        const name = r.instrument_name || r.name || sym;
+        const country = (r.country || '').toUpperCase();
+        const exchange = (r.exchange || '').toUpperCase();
+        const type = (r.type || r.instrument_type || '').toUpperCase();
+        const isHK = country === 'HONG KONG' || exchange.includes('HONG KONG') || exchange === 'HKSE' || sym.endsWith('.HK');
+        const isETF = type.includes('ETF') || name.toUpperCase().includes('ETF');
+        let assetType = 'us_stock';
+        if (isHK && isETF) assetType = 'hk_etf';
+        else if (isHK) assetType = 'hk_stock';
+        else if (isETF) assetType = 'etf';
+        return { symbol: sym, name, type: assetType };
       }).filter(r => r.symbol);
     } catch (e) {
       return [];
@@ -62,13 +64,13 @@ const API = {
     }));
   },
 
-  /** Combined search — Yahoo first, CoinGecko for crypto backup */
+  /** Combined search — Twelve Data first, CoinGecko for crypto backup */
   async searchAll(query) {
     if (!query || query.length < 1) return [];
     const isCrypto = /^(btc|eth|sol|ada|dot|doge|xrp|bnb|avax|matic|link|uni|atom|ltc|fil|near|apt|arb|op|sui)/i.test(query);
 
-    // Yahoo Finance (covers stocks, ETFs, forex — US + HK)
-    let results = await this.searchYahoo(query);
+    // Twelve Data (stocks + ETFs including HK)
+    let results = await this.searchTwelve(query);
 
     // CoinGecko for crypto queries
     if (isCrypto) {
@@ -84,21 +86,62 @@ const API = {
       seen.add(key);
       return true;
     }).slice(0, 12);
-  },
+  }
 
-  /** Fetch a single stock/ETF quote from Yahoo Finance */
-  async fetchYahooQuote(symbol) {
-    const data = await this.yahooFetch(`/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1d`);
-    const result = data?.chart?.result?.[0];
-    if (!result) throw new Error(`No data for ${symbol}`);
-    const meta = result.meta;
-    const price = meta.regularMarketPrice;
-    if (!price || price === 0) throw new Error(`Zero price for ${symbol}`);
-    return {
-      price,
-      currency: meta.currency || this.inferCurrency(symbol)
-    };
-  },
+  /**
+   * Batch fetch quotes from Twelve Data time_series.
+   * Pass up to 8 symbols per call (rate limit: 8/min).
+   * Falls back to individual /price calls if batch fails.
+   */
+  async batchQuoteTwelve(symbols) {
+    if (symbols.length === 0) return {};
+    const result = {};
+    // Process in chunks of 8 to respect rate limit
+    const chunkSize = 8;
+    for (let i = 0; i < symbols.length; i += chunkSize) {
+      const chunk = symbols.slice(i, i + chunkSize);
+      const symbolParam = chunk.join(',');
+      try {
+        const data = await this.tdFetch('/time_series', {
+          symbol: symbolParam,
+          interval: '1day',
+          outputsize: 1
+        });
+        // Response can be a single object (1 symbol) or array (multiple)
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            const sym = item.meta?.symbol || item.symbol;
+            if (sym) {
+              const vals = item.values?.[0];
+              if (vals) {
+                const price = parseFloat(vals.close);
+                if (price > 0) result[sym.toUpperCase()] = { price, currency: this.inferCurrency(sym, item.meta?.currency) };
+              }
+            }
+          }
+        } else if (data.meta?.symbol) {
+          const sym = data.meta.symbol;
+          const vals = data.values?.[0];
+          if (vals) {
+            const price = parseFloat(vals.close);
+            if (price > 0) result[sym.toUpperCase()] = { price, currency: this.inferCurrency(sym, data.meta?.currency) };
+          }
+        }
+      } catch (e) {
+        // Fallback: try individual /price calls for this chunk
+        for (const sym of chunk) {
+          try {
+            const d = await this.tdFetch('/price', { symbol: sym });
+            const price = parseFloat(d?.price);
+            if (price > 0) result[sym.toUpperCase()] = { price, currency: this.inferCurrency(sym) };
+          } catch (_) {}
+        }
+      }
+      // Rate limit: wait between chunks
+      if (i + chunkSize < symbols.length) await this.sleep(8000);
+    }
+    return result;
+  }
 
   /** Fetch crypto price from CoinGecko */
   async fetchCryptoPrice(coinIds) {
@@ -112,7 +155,7 @@ const API = {
       if (data[id]?.usd != null) result[id] = { price: data[id].usd, currency: 'USD' };
     }
     return result;
-  },
+  }
 
   /** Fetch forex rates from ExchangeRate-API */
   async fetchForexRates(baseCurrency = 'USD') {
@@ -120,27 +163,34 @@ const API = {
     if (!res.ok) throw new Error(`ExchangeRate HTTP ${res.status}`);
     const data = await res.json();
     return data.rates || {};
-  },
+  }
 
   /** Fetch all asset prices */
   async fetchAllPrices(assets) {
     const prices = {};
     const errors = [];
-    const finnhubAssets = assets.filter(a =>
+    const tdAssets = assets.filter(a =>
       ['us_stock', 'hk_stock', 'etf', 'hk_etf'].includes(a.type)
     );
     const cryptoAssets = assets.filter(a => a.type === 'crypto');
     const forexAssets = assets.filter(a => a.type === 'forex');
     const cashAssets = assets.filter(a => a.type === 'cash');
 
-    // 1. Yahoo Finance stocks/ETFs (sequential)
-    for (const asset of finnhubAssets) {
+    // 1. Twelve Data stocks/ETFs (batch)
+    if (tdAssets.length > 0) {
       try {
-        const result = await this.fetchYahooQuote(asset.symbol);
-        prices[asset.id] = result;
-        await this.sleep(500);
+        const symbols = tdAssets.map(a => a.symbol);
+        const tdPrices = await this.batchQuoteTwelve(symbols);
+        for (const asset of tdAssets) {
+          const key = asset.symbol.toUpperCase();
+          if (tdPrices[key]) {
+            prices[asset.id] = tdPrices[key];
+          } else {
+            errors.push({ symbol: asset.symbol, name: asset.name, error: 'No Twelve Data quote' });
+          }
+        }
       } catch (err) {
-        errors.push({ symbol: asset.symbol, name: asset.name, error: err.message });
+        tdAssets.forEach(a => errors.push({ symbol: a.symbol, name: a.name, error: err.message }));
       }
     }
 
@@ -198,15 +248,16 @@ const API = {
     }
 
     return { prices, errors };
-  },
+  }
 
-  inferCurrency(symbol) {
+  inferCurrency(symbol, apiCurrency) {
+    if (apiCurrency) return apiCurrency.toUpperCase();
     if (symbol.endsWith('.HK')) return 'HKD';
     if (symbol.endsWith('.T')) return 'JPY';
     if (symbol.endsWith('.L')) return 'GBP';
     if (symbol.endsWith('.SS') || symbol.endsWith('.SZ')) return 'CNY';
     return 'USD';
-  },
+  }
 
   sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 };
