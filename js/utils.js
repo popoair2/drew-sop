@@ -111,6 +111,7 @@ const Utils = {
       'OP': 'optimism',
       'SUI': 'sui'
     };
-    return map[symbol.toUpperCase()] || symbol.toLowerCase();
+    const sym = symbol.toUpperCase().replace(/-(USD|USDT|BTC|ETH)$/, '');
+    return map[sym] || sym.toLowerCase();
   }
 };
