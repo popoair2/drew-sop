@@ -55,7 +55,7 @@ const App = {
     this._searchDebounced = Utils.debounce(async (q) => {
       if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
       const key = this.apiKey || Storage.getApiKey();
-      searchDD.innerHTML = `<div class="search-loading">搜尋中… (key: ${key ? key.substring(0,6)+'...' : 'NONE'})</div>`;
+      searchDD.innerHTML = `<div class="search-loading">搜尋中… key=${key ? key.substring(0,4)+'...'+key.substring(key.length-4) : 'NONE'}</div>`;
       searchDD.style.display = 'block';
 
       // Test Finnhub connectivity first
@@ -63,9 +63,9 @@ const App = {
       if (key) {
         try {
           const testRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${key}`);
-          finnhubOk = testRes.ok;
           if (!testRes.ok) {
-            searchDD.innerHTML = `<div class="search-empty">Finnub HTTP ${testRes.status} — 搜尋唔到</div>`;
+            const errText = await testRes.text();
+            searchDD.innerHTML = `<div class="search-empty">Finnhub HTTP ${testRes.status}: ${errText}</div>`;
             return;
           }
           const testData = await testRes.json();
