@@ -144,5 +144,36 @@ const Storage = {
       return [];
     }
     return data || [];
+  },
+
+  /** Migrate any existing localStorage data to Supabase (one-time) */
+  async migrateLocalToSupabase() {
+    try {
+      const localAssets = JSON.parse(localStorage.getItem('ds_assets_cache') || '[]');
+      if (localAssets.length > 0) {
+        console.log('Migrating', localAssets.length, 'assets from localStorage to Supabase');
+        for (const asset of localAssets) {
+          await this.saveAsset(asset);
+        }
+        localStorage.removeItem('ds_assets_cache');
+      }
+      const localCats = JSON.parse(localStorage.getItem('ds_categories_cache') || '[]');
+      if (localCats.length > 0) {
+        for (const cat of localCats) {
+          const sb = this.initSupabase();
+          if (sb) {
+            await sb.from('ds_categories').upsert({ id: cat.id, name: cat.name, color: cat.color });
+          }
+        }
+        localStorage.removeItem('ds_categories_cache');
+      }
+    } catch (e) {
+      console.warn('Migration failed:', e);
+    }
+  },
+
+  /** Get cached prices (from Supabase ds_snapshots) */
+  getPrices() {
+    return {};
   }
 };
