@@ -78,32 +78,6 @@ const API = {
     }
   },
 
-  /** Combined search — Twelve Data first, CoinGecko for crypto backup */
-  async searchAll(query) {
-    if (!query || query.length < 1) return [];
-    const isCrypto = /^(btc|eth|sol|ada|dot|doge|xrp|bnb|avax|matic|link|uni|atom|ltc|fil|near|apt|arb|op|sui)/i.test(query);
-
-    let results = await this.searchTwelve(query);
-
-    // CoinGecko for crypto queries
-    if (isCrypto) {
-      const cg = await this.searchCrypto(query);
-      results = results.concat(cg);
-    }
-
-    // Dedupe
-    const seen = {};
-    const out = [];
-    for (let i = 0; i < results.length; i++) {
-      const key = results[i].symbol.toUpperCase();
-      if (!seen[key]) {
-        seen[key] = true;
-        out.push(results[i]);
-      }
-    }
-    return out.slice(0, 12);
-  },
-
   /**
    * Batch fetch quotes from Twelve Data time_series.
    * Pass up to 8 symbols per call (rate limit: 8/min).

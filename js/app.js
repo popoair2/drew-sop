@@ -53,7 +53,17 @@ const App = {
       searchDD.innerHTML = '<div class="search-loading">搜尋中…</div>';
       searchDD.style.display = 'block';
       try {
-        const results = await API.searchAll(q);
+        // Read current asset type selection to decide which API to use
+        const typeSelect = document.getElementById('inputType');
+        const selectedType = typeSelect ? typeSelect.value : '';
+        let results;
+        if (selectedType === 'crypto') {
+          // Crypto selected → only search CoinGecko
+          results = await API.searchCrypto(q);
+        } else {
+          // Stocks/ETFs/forex/cash → search Twelve Data
+          results = await API.searchTwelve(q);
+        }
         if (results.length === 0) {
           searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
           return;
