@@ -101,12 +101,13 @@
       <h2 class="modal-title" id="modalAssetTitle">新增資產</h2>
       <form id="formAsset">
         <div class="form-group">
-          <label>資產代號</label>
+          <label>代號 (Ticker)</label>
           <input type="text" id="inputSymbol" placeholder="例：AAPL, 0700.HK, BTC" required>
         </div>
-        <div class="form-group">
-          <label>資產名稱</label>
-          <input type="text" id="inputName" placeholder="例：Apple Inc." required>
+        <div class="form-group form-group-search">
+          <label>顯示名稱</label>
+          <input type="text" id="inputName" placeholder="輸入名稱或代號搜尋…" required autocomplete="off">
+          <div class="search-dropdown" id="searchDropdown"></div>
         </div>
         <div class="form-row">
           <div class="form-group">

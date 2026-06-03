@@ -47,6 +47,58 @@ const App = {
     document.getElementById('btnCancelAsset').addEventListener('click', () => this.closeModal('modalAsset'));
     document.getElementById('formAsset').addEventListener('submit', (e) => { e.preventDefault(); this.saveAsset(); });
     document.getElementById('btnRefreshPrices').addEventListener('click', () => this.refreshPrices());
+
+    // Search dropdown — debounce input on name field
+    const nameInput = document.getElementById('inputName');
+    const searchDD = document.getElementById('searchDropdown');
+    this._searchDebounced = Utils.debounce(async (q) => {
+      if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
+      searchDD.innerHTML = '<div class="search-loading">搜尋中…</div>';
+      searchDD.style.display = 'block';
+      const results = await API.searchAll(q, this.apiKey);
+      if (results.length === 0) {
+        searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
+        return;
+      }
+      searchDD.innerHTML = results.map((r, i) => {
+        const typeLabel = { us_stock: '美股', hk_stock: '港股', etf: 'ETF', crypto: '加密' }[r.type] || '';
+        return `<div class="search-item" data-idx="${i}" data-symbol="${r.symbol}" data-name="${r.name}" data-type="${r.type}">
+          <span class="search-symbol">${r.symbol}</span>
+          <span class="search-name">${r.name}</span>
+          <span class="search-type">${typeLabel}</span>
+        </div>`;
+      }).join('');
+      this._searchResults = results;
+    }, 350);
+    nameInput.addEventListener('input', (e) => this._searchDebounced(e.target.value.trim()));
+    nameInput.addEventListener('focus', (e) => {
+      if (searchDD.innerHTML) searchDD.style.display = 'block';
+    });
+    searchDD.addEventListener('click', (e) => {
+      const item = e.target.closest('.search-item');
+      if (!item) return;
+      const symbol = item.dataset.symbol;
+      const name = item.dataset.name;
+      const type = item.dataset.type;
+      document.getElementById('inputSymbol').value = symbol;
+      document.getElementById('inputName').value = name;
+      // Auto-set type if matching
+      const typeSelect = document.getElementById('inputType');
+      if (type && typeSelect.querySelector(`option[value="${type}"]`)) {
+        typeSelect.value = type;
+      }
+      // Auto-set currency based on symbol
+      const currSelect = document.getElementById('inputCurrency');
+      if (symbol.endsWith('.HK')) currSelect.value = 'HKD';
+      else if (symbol.endsWith('.T')) currSelect.value = 'JPY';
+      else if (symbol.endsWith('.L')) currSelect.value = 'GBP';
+      else if (type === 'crypto') currSelect.value = 'USD';
+      searchDD.style.display = 'none';
+    });
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.form-group-search')) searchDD.style.display = 'none';
+    });
     document.getElementById('btnManageCategories').addEventListener('click', () => this.openCategoryModal());
     document.getElementById('btnCloseCategories').addEventListener('click', () => this.closeModal('modalCategories'));
     document.getElementById('formAddCategory').addEventListener('submit', (e) => { e.preventDefault(); this.addCategory(); });

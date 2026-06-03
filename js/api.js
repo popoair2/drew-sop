@@ -46,6 +46,68 @@ const API = {
     return data.rates || {};
   },
 
+  /** Search Finnhub for stock/ETF symbols (US + HK) */
+  async searchFinnhub(query, apiKey) {
+    if (!query || query.length < 1) return [];
+    const url = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(query)}&token=${apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data.result) return [];
+    return data.result
+      .filter(r => r.symbol)
+      .slice(0, 12)
+      .map(r => ({
+        symbol: r.symbol,
+        name: r.description || r.symbol,
+        type: r.symbol.endsWith('.HK') ? 'hk_stock' : (r.symbol.endsWith('.T') ? 'us_stock' : 'us_stock')
+      }));
+  },
+
+  /** Search CoinGecko for crypto */
+  async searchCoinGecko(query) {
+    if (!query || query.length < 2) return [];
+    const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data.coins) return [];
+    return data.coins.slice(0, 8).map(c => ({
+      symbol: c.symbol.toUpperCase(),
+      name: c.name,
+      type: 'crypto'
+    }));
+  },
+
+  /** Combined search — returns deduplicated results */
+  async searchAll(query, apiKey) {
+    if (!query || query.length < 1) return [];
+    const results = [];
+
+    // Always search Finnhub (covers US + HK)
+    if (apiKey) {
+      try {
+        const finnhubResults = await this.searchFinnhub(query, apiKey);
+        results.push(...finnhubResults);
+      } catch (e) {}
+    }
+
+    // Also search CoinGecko for crypto
+    try {
+      const cryptoResults = await this.searchCoinGecko(query);
+      results.push(...cryptoResults);
+    } catch (e) {}
+
+    // Deduplicate by symbol
+    const seen = new Set();
+    return results.filter(r => {
+      const key = r.symbol.toUpperCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 12);
+  },
+
   /** Fetch all asset prices */
   async fetchAllPrices(assets, apiKey) {
     const prices = {};
