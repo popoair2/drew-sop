@@ -40,12 +40,16 @@ body {
   color: var(--white);
   min-height: 100vh;
   overflow-x: hidden;
+  /* iOS safe area — notch / Dynamic Island */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* --- HEADER --- */
 .header {
   padding: 24px 32px;
   border-bottom: 2px solid var(--gray-dark);
+  /* Stretch into safe area on top */
+  padding-top: max(24px, env(safe-area-inset-top));
 }
 
 .header-inner {
