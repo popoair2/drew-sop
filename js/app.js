@@ -15,11 +15,7 @@ const App = {
 
   /** Initialize app */
   async init() {
-    // Hardcoded API key — single user app
-    const EMBEDDED_KEY = 'd8fhibpr01qn443a0g9gd8fhibpr01qn443a0ga0';
-    this.apiKey = Storage.getApiKey() || EMBEDDED_KEY;
-    // Save to storage if not already there
-    if (!Storage.getApiKey()) Storage.setApiKey(EMBEDDED_KEY);
+    // No API key needed — using Yahoo Finance (free, no key)
 
     // Load from Supabase (with localStorage fallback)
     this.assets = await Storage.getAssets();
@@ -54,50 +50,18 @@ const App = {
     const searchDD = document.getElementById('searchDropdown');
     this._searchDebounced = Utils.debounce(async (q) => {
       if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
-      const key = this.apiKey || Storage.getApiKey();
-      searchDD.innerHTML = `<div class="search-loading">搜尋中… key=${key ? key.substring(0,4)+'...'+key.substring(key.length-4) : 'NONE'}</div>`;
+      searchDD.innerHTML = '<div class="search-loading">搜尋中…</div>';
       searchDD.style.display = 'block';
-
-      // Test Finnhub connectivity first
-      let finnhubOk = false;
-      if (key) {
-        try {
-          const testRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${key}`);
-          if (!testRes.ok) {
-            const errText = await testRes.text();
-            searchDD.innerHTML = `<div class="search-empty">Finnhub HTTP ${testRes.status}: ${errText}</div>`;
-            return;
-          }
-          const testData = await testRes.json();
-          if (testData.result && testData.result.length > 0) {
-            // Parse directly here as backup
-            const parsed = testData.result.filter(r => r.symbol).slice(0, 12).map(r => {
-              const isHK = r.symbol.endsWith('.HK');
-              const desc = (r.description || '').toUpperCase();
-              const isETF = desc.includes('ETF') || desc.includes('ETP') || desc.includes('TRUST') || desc.includes('INDEX');
-              let type = 'us_stock';
-              if (isHK && isETF) type = 'hk_etf';
-              else if (isHK) type = 'hk_stock';
-              else if (isETF) type = 'etf';
-              return { symbol: r.symbol, name: r.description || r.symbol, type };
-            });
-            // Render directly
-            this._renderSearchResults(parsed, searchDD);
-            return;
-          }
-        } catch(e) {
-          searchDD.innerHTML = `<div class="search-empty">Finnub 錯誤: ${e.message}</div>`;
+      try {
+        const results = await API.searchAll(q);
+        if (results.length === 0) {
+          searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
           return;
         }
+        this._renderSearchResults(results, searchDD);
+      } catch (e) {
+        searchDD.innerHTML = `<div class="search-empty">搜尋錯誤: ${e.message}</div>`;
       }
-
-      // Fallback to searchAll (CoinGecko only)
-      const results = await API.searchAll(q, key);
-      if (results.length === 0) {
-        searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
-        return;
-      }
-      this._renderSearchResults(results, searchDD);
     }, 350);
     nameInput.addEventListener('input', (e) => this._searchDebounced(e.target.value.trim()));
     nameInput.addEventListener('focus', (e) => {
@@ -484,7 +448,6 @@ const App = {
   // =============================================
 
   async refreshPrices() {
-    if (!this.apiKey) return;
     if (this.assets.length === 0) return;
 
     this.isLoading = true;
@@ -492,7 +455,7 @@ const App = {
     this.renderErrors();
 
     try {
-      const { prices, errors } = await API.fetchAllPrices(this.assets, this.apiKey);
+      const { prices, errors } = await API.fetchAllPrices(this.assets);
       this.prices = { ...this.prices, ...prices };
       this.fetchErrors = errors;
       Storage.savePrices(this.prices);
