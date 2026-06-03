@@ -196,5 +196,43 @@ const Storage = {
   /** Get cached prices (from Supabase ds_snapshots) */
   getPrices() {
     return {};
+  },
+
+  /** Save prices cache (no-op for Supabase-only mode — prices are live) */
+  savePrices(prices) {
+    // Prices are always fetched live; no caching needed
+  },
+
+  /** Save a daily snapshot of total portfolio value to Supabase */
+  async saveDailySnapshot(totalHKD, assetValues) {
+    const sb = this.initSupabase();
+    if (!sb) return;
+    const snapshot = {
+      total_value_hkd: totalHKD,
+      values: assetValues,
+      created_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('ds_snapshots').insert(snapshot);
+    if (error) console.error('Supabase saveDailySnapshot error:', error);
+  },
+
+  /** Get snapshot from N days ago (synchronous — returns null, use getSnapshots async instead) */
+  getSnapshotDaysAgo(days) {
+    // Synchronous stub — returns null; caller should use async getSnapshots()
+    return null;
+  },
+
+  /** Clear all data (assets + categories) from Supabase */
+  async clearAll() {
+    const sb = this.initSupabase();
+    if (!sb) return;
+    await sb.from('ds_assets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await sb.from('ds_categories').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await sb.from('ds_snapshots').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  },
+
+  /** Set API key (no-op — using free APIs) */
+  setApiKey(key) {
+    // No API key needed — Yahoo Finance + CoinGecko are free
   }
 };
