@@ -1,29 +1,13 @@
 // Service Worker — Drew-Sop PWA
-const CACHE_NAME = 'drew-sop-v3';
+const CACHE_NAME = 'drew-sop-v4';
 const BASE = '/drew-sop/';
-const ASSETS = [
-  BASE,
-  BASE + 'index.html',
-  BASE + 'css/style.css',
-  BASE + 'js/utils.js',
-  BASE + 'js/storage.js',
-  BASE + 'js/api.js',
-  BASE + 'js/charts.js',
-  BASE + 'js/app.js',
-  BASE + 'manifest.json',
-  BASE + 'assets/icon-192.png',
-  BASE + 'assets/icon-512.png'
-];
 
-// Install — cache shell
+// Install — skip waiting so new SW activates immediately
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
-// Activate — purge old cache
+// Activate — purge old cache + claim all clients
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -33,21 +17,28 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch — cache first for shell, network first for API
+// Fetch — network first for HTML/JS/CSS, cache first for icons
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+
   // Don't cache API calls
-  if (url.hostname.includes('finnhub') || url.hostname.includes('coingecko') || url.hostname.includes('supabase') || url.hostname.includes('exchangerate')) {
+  if (url.hostname.includes('finnhub') || url.hostname.includes('coingecko') ||
+      url.hostname.includes('supabase') || url.hostname.includes('exchangerate') ||
+      url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('fonts.googleapis')) {
     e.respondWith(fetch(e.request));
     return;
   }
-  // Cache first for static assets
+
+  // For our own assets: network first, fall back to cache
   e.respondWith(
-    caches.open(CACHE_NAME).then(cache =>
-      cache.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-        if (resp.ok) cache.put(e.request, resp.clone());
-        return resp;
-      }))
+    fetch(e.request).then(resp => {
+      if (resp.ok) {
+        const clone = resp.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+      }
+      return resp;
+    }).catch(() =>
+      caches.open(CACHE_NAME).then(cache => cache.match(e.request))
     )
   );
 });

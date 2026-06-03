@@ -189,18 +189,29 @@
     </div>
   </div>
 
-  <!-- Register Service Worker -->
+  <!-- Version: 4 — cache buster -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=4').then(reg => {
+        // Force update on every load
+        reg.update();
+      }).catch(() => {});
+      // If there's a waiting SW, reload to activate it
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // New SW took over — reload once
+        if (!sessionStorage.getItem('swReloaded')) {
+          sessionStorage.setItem('swReloaded', '1');
+          location.reload();
+        }
+      });
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/utils.js?v=4"></script>
+  <script src="js/storage.js?v=4"></script>
+  <script src="js/api.js?v=4"></script>
+  <script src="js/charts.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
