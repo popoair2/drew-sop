@@ -7,7 +7,7 @@
 
 const Storage = {
   SUPABASE_URL: 'https://tkmnvfpmssfzwnuvenax.supabase.co',
-  SUPABASE_KEY: 'sb_publishable_BJG6Plmnr2q1hgBBWbmHwg_nWlyczFM',
+  SUPABASE_KEY: 'sb_publishable_qlEBaRYaqQVtUcvbK4t8fg_3Tjj7yvv',
   supabase: null,
 
   /** Initialize Supabase client */
