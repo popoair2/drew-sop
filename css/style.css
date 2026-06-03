@@ -738,3 +738,27 @@ body {
   text-align: center;
 }
 
+/* --- PULL-TO-REFRESH --- */
+.pull-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: hidden;
+  background: var(--card-green);
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  transition: height 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+.pull-text {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+

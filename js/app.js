@@ -126,6 +126,63 @@ const App = {
         if (e.target === overlay) overlay.classList.remove('active');
       });
     });
+
+    // Pull-to-refresh
+    this._initPullToRefresh();
+  },
+
+  /** Pull-to-refresh for PWA / mobile */
+  _initPullToRefresh() {
+    let startY = 0;
+    let pulling = false;
+    const threshold = 80;
+    const indicator = document.getElementById('pullIndicator');
+
+    document.addEventListener('touchstart', (e) => {
+      // Only activate when scrolled to top
+      if (window.scrollY === 0 && !this._modalOpen()) {
+        startY = e.touches[0].clientY;
+        pulling = true;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!pulling) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 0 && dy < threshold * 2.5) {
+        indicator.style.height = Math.min(dy, threshold) + 'px';
+        indicator.style.opacity = Math.min(dy / threshold, 1);
+        if (dy >= threshold) {
+          indicator.querySelector('.pull-text').textContent = '放手更新';
+        } else {
+          indicator.querySelector('.pull-text').textContent = '向下拉更新';
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+      if (!pulling) return;
+      pulling = false;
+      const h = parseInt(indicator.style.height) || 0;
+      if (h >= threshold) {
+        indicator.querySelector('.pull-text').textContent = '更新中…';
+        indicator.style.height = '40px';
+        // Reload data from Supabase then refresh prices
+        this.assets = await Storage.getAssets();
+        this.categories = await Storage.getCategories();
+        this.snapshots = await Storage.getSnapshots();
+        await this.refreshPrices();
+        this.render();
+      }
+      // Animate closed
+      indicator.style.height = '0px';
+      indicator.style.opacity = '0';
+    });
+  },
+
+  /** Check if any modal is open */
+  _modalOpen() {
+    return document.querySelector('.modal-overlay.active') !== null;
   },
 
   /** Render everything */
