@@ -55,7 +55,7 @@ const App = {
       if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
       searchDD.innerHTML = '<div class="search-loading">搜尋中…</div>';
       searchDD.style.display = 'block';
-      const results = await API.searchAll(q, this.apiKey);
+      const results = await API.searchAll(q, this.apiKey || Storage.getApiKey());
       if (results.length === 0) {
         searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
         return;
