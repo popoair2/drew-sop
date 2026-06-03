@@ -11,10 +11,10 @@
 
 const API = {
   YAHOO_BASE: 'https://query1.finance.yahoo.com',
-  // CORS proxy fallback chain
+  // CORS proxy fallback chain (corsproxy.io blocks server-side; allorigins works)
   CORS_PROXIES: [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url='
+    'https://api.allorigins.win/raw?url=',
+    'https://cors-anywhere.herokuapp.com/'
   ],
 
   async yahooFetch(path) {
