@@ -15,7 +15,11 @@ const App = {
 
   /** Initialize app */
   async init() {
-    this.apiKey = Storage.getApiKey();
+    // Hardcoded API key — single user app
+    const EMBEDDED_KEY = 'd8fhibpr01qn443a0g9gd8fhibpr01qn443a0ga0';
+    this.apiKey = Storage.getApiKey() || EMBEDDED_KEY;
+    // Save to storage if not already there
+    if (!Storage.getApiKey()) Storage.setApiKey(EMBEDDED_KEY);
 
     // Load from Supabase (with localStorage fallback)
     this.assets = await Storage.getAssets();
@@ -33,12 +37,9 @@ const App = {
     this.bindEvents();
     this.render();
 
-    if (!this.apiKey) {
-      this.showModal('modalApiKey');
-    } else {
-      await this.refreshPrices();
-      this.startAutoRefresh();
-    }
+    // API key is embedded, always refresh
+    await this.refreshPrices();
+    this.startAutoRefresh();
   },
 
   /** Bind all event listeners */
