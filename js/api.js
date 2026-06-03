@@ -84,12 +84,12 @@ const API = {
     }));
   },
 
-  /** Combined search — returns deduplicated results */
+  /** Combined search — Finnhub first, CoinGecko only for crypto queries */
   async searchAll(query, apiKey) {
     if (!query || query.length < 1) return [];
     const results = [];
 
-    // Search Finnhub (covers US + HK stocks/ETFs)
+    // Search Finnhub (covers US + HK stocks/ETFs) — PRIMARY
     if (apiKey) {
       try {
         const finnhubResults = await this.searchFinnhub(query, apiKey);
@@ -101,16 +101,19 @@ const API = {
       console.warn('searchAll: no apiKey, skipping Finnhub');
     }
 
-    // Search CoinGecko for crypto (with timeout, may rate-limit)
-    try {
-      const cgPromise = this.searchCoinGecko(query);
-      const cryptoResults = await Promise.race([
-        cgPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-      ]);
-      results.push(...cryptoResults);
-    } catch (e) {
-      console.warn('CoinGecko search failed/skipped:', e.message);
+    // Only search CoinGecko if query looks crypto-like OR Finnhub returned nothing
+    const looksLikeCrypto = /^(btc|eth|sol|ada|dot|doge|xrp|bnb|avax|matic|link|uni|atom|ltc|fil|near|apt|arb|op|sui)/i.test(query);
+    if (looksLikeCrypto || results.length === 0) {
+      try {
+        const cgPromise = this.searchCoinGecko(query);
+        const cryptoResults = await Promise.race([
+          cgPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000))
+        ]);
+        results.push(...cryptoResults);
+      } catch (e) {
+        console.warn('CoinGecko search failed/skipped:', e.message);
+      }
     }
 
     // Deduplicate by symbol

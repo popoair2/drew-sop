@@ -54,22 +54,50 @@ const App = {
     const searchDD = document.getElementById('searchDropdown');
     this._searchDebounced = Utils.debounce(async (q) => {
       if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
-      searchDD.innerHTML = '<div class="search-loading">搜尋中…</div>';
+      const key = this.apiKey || Storage.getApiKey();
+      searchDD.innerHTML = `<div class="search-loading">搜尋中… (key: ${key ? key.substring(0,6)+'...' : 'NONE'})</div>`;
       searchDD.style.display = 'block';
-      const results = await API.searchAll(q, this.apiKey || Storage.getApiKey());
+
+      // Test Finnhub connectivity first
+      let finnhubOk = false;
+      if (key) {
+        try {
+          const testRes = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${key}`);
+          finnhubOk = testRes.ok;
+          if (!testRes.ok) {
+            searchDD.innerHTML = `<div class="search-empty">Finnub HTTP ${testRes.status} — 搜尋唔到</div>`;
+            return;
+          }
+          const testData = await testRes.json();
+          if (testData.result && testData.result.length > 0) {
+            // Parse directly here as backup
+            const parsed = testData.result.filter(r => r.symbol).slice(0, 12).map(r => {
+              const isHK = r.symbol.endsWith('.HK');
+              const desc = (r.description || '').toUpperCase();
+              const isETF = desc.includes('ETF') || desc.includes('ETP') || desc.includes('TRUST') || desc.includes('INDEX');
+              let type = 'us_stock';
+              if (isHK && isETF) type = 'hk_etf';
+              else if (isHK) type = 'hk_stock';
+              else if (isETF) type = 'etf';
+              return { symbol: r.symbol, name: r.description || r.symbol, type };
+            });
+            // Render directly
+            this._renderSearchResults(parsed, searchDD);
+            return;
+          }
+        } catch(e) {
+          searchDD.innerHTML = `<div class="search-empty">Finnub 錯誤: ${e.message}</div>`;
+          return;
+        }
+      }
+
+      // Fallback to searchAll (CoinGecko only)
+      const results = await API.searchAll(q, key);
       if (results.length === 0) {
         searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
         return;
       }
-      searchDD.innerHTML = results.map((r, i) => {
-        const typeLabel = { us_stock: '美股', hk_stock: '港股', etf: '美股ETF', hk_etf: '港股ETF', crypto: '加密' }[r.type] || '';
-        return `<div class="search-item" data-idx="${i}" data-symbol="${r.symbol}" data-name="${r.name}" data-type="${r.type}">
-          <span class="search-symbol">${r.symbol}</span>
-          <span class="search-name">${r.name}</span>
-          <span class="search-type">${typeLabel}</span>
-        </div>`;
-      }).join('');
-      this._searchResults = results;
+      this._renderSearchResults(results, searchDD);
     }, 350);
     nameInput.addEventListener('input', (e) => this._searchDebounced(e.target.value.trim()));
     nameInput.addEventListener('focus', (e) => {
@@ -212,6 +240,19 @@ const App = {
   /** Check if any modal is open */
   _modalOpen() {
     return document.querySelector('.modal-overlay.active') !== null;
+  },
+
+  /** Render search results into dropdown */
+  _renderSearchResults(results, dd) {
+    dd.innerHTML = results.map((r, i) => {
+      const typeLabel = { us_stock: '美股', hk_stock: '港股', etf: '美股ETF', hk_etf: '港股ETF', crypto: '加密' }[r.type] || '';
+      return `<div class="search-item" data-idx="${i}" data-symbol="${r.symbol}" data-name="${r.name}" data-type="${r.type}">
+        <span class="search-symbol">${r.symbol}</span>
+        <span class="search-name">${r.name}</span>
+        <span class="search-type">${typeLabel}</span>
+      </div>`;
+    }).join('');
+    this._searchResults = results;
   },
 
   /** Render everything */
