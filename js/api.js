@@ -57,11 +57,16 @@ const API = {
     return data.result
       .filter(r => r.symbol)
       .slice(0, 12)
-      .map(r => ({
-        symbol: r.symbol,
-        name: r.description || r.symbol,
-        type: r.symbol.endsWith('.HK') ? 'hk_stock' : (r.symbol.endsWith('.T') ? 'us_stock' : 'us_stock')
-      }));
+      .map(r => {
+        const isHK = r.symbol.endsWith('.HK');
+        const desc = (r.description || '').toUpperCase();
+        const isETF = desc.includes('ETF') || desc.includes('ETP') || desc.includes('TRUST') || desc.includes('INDEX');
+        let type = 'us_stock';
+        if (isHK && isETF) type = 'hk_etf';
+        else if (isHK) type = 'hk_stock';
+        else if (isETF) type = 'etf';
+        return { symbol: r.symbol, name: r.description || r.symbol, type };
+      });
   },
 
   /** Search CoinGecko for crypto */
@@ -115,7 +120,7 @@ const API = {
 
     // Group by API source
     const finnhubAssets = assets.filter(a =>
-      ['us_stock', 'hk_stock', 'etf'].includes(a.type)
+      ['us_stock', 'hk_stock', 'etf', 'hk_etf'].includes(a.type)
     );
     const cryptoAssets = assets.filter(a => a.type === 'crypto');
     const forexAssets = assets.filter(a => a.type === 'forex');

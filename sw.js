@@ -1,5 +1,5 @@
 // Service Worker — Drew-Sop PWA
-const CACHE_NAME = 'drew-sop-v2';
+const CACHE_NAME = 'drew-sop-v3';
 const BASE = '/drew-sop/';
 const ASSETS = [
   BASE,

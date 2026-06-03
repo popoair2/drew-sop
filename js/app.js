@@ -61,7 +61,7 @@ const App = {
         return;
       }
       searchDD.innerHTML = results.map((r, i) => {
-        const typeLabel = { us_stock: '美股', hk_stock: '港股', etf: 'ETF', crypto: '加密' }[r.type] || '';
+        const typeLabel = { us_stock: '美股', hk_stock: '港股', etf: '美股ETF', hk_etf: '港股ETF', crypto: '加密' }[r.type] || '';
         return `<div class="search-item" data-idx="${i}" data-symbol="${r.symbol}" data-name="${r.name}" data-type="${r.type}">
           <span class="search-symbol">${r.symbol}</span>
           <span class="search-name">${r.name}</span>
@@ -98,6 +98,34 @@ const App = {
     // Close dropdown on outside click
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.form-group-search')) searchDD.style.display = 'none';
+    });
+
+    // When type changes to 'cash', auto-fill symbol from currency
+    document.getElementById('inputType').addEventListener('change', (e) => {
+      const type = e.target.value;
+      const symInput = document.getElementById('inputSymbol');
+      const nameInput = document.getElementById('inputName');
+      const currInput = document.getElementById('inputCurrency');
+      if (type === 'cash') {
+        const cur = currInput.value;
+        symInput.value = cur;
+        symInput.readOnly = true;
+        nameInput.value = cur + ' 現金';
+      } else {
+        symInput.readOnly = false;
+        if (symInput.value === symInput._prevCash) symInput.value = '';
+        if (nameInput.value.endsWith(' 現金')) nameInput.value = '';
+      }
+    });
+
+    // When currency changes and type is cash, update symbol
+    document.getElementById('inputCurrency').addEventListener('change', (e) => {
+      const type = document.getElementById('inputType').value;
+      if (type === 'cash') {
+        const cur = e.target.value;
+        document.getElementById('inputSymbol').value = cur;
+        document.getElementById('inputName').value = cur + ' 現金';
+      }
     });
     document.getElementById('btnManageCategories').addEventListener('click', () => this.openCategoryModal());
     document.getElementById('btnCloseCategories').addEventListener('click', () => this.closeModal('modalCategories'));
