@@ -89,11 +89,12 @@ const Storage = {
     }));
   },
 
-  async saveAsset(asset) {
+  async addAsset(asset) {
     const sb = this.initSupabase();
     if (!sb) return;
-    const { error } = await sb.from('ds_assets').upsert({
-      id: asset.id,
+    const id = asset.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+    const { error } = await sb.from('ds_assets').insert({
+      id: id,
       symbol: asset.symbol,
       name: asset.name,
       type: asset.type,
@@ -101,7 +102,12 @@ const Storage = {
       quantity: asset.quantity,
       currency: asset.currency
     });
-    if (error) console.error('Supabase saveAsset error:', error);
+    if (error) console.error('Supabase addAsset error:', error);
+    return id;
+  },
+
+  async saveAsset(asset) {
+    return this.addAsset(asset);
   },
 
   async deleteAsset(id) {
@@ -109,6 +115,21 @@ const Storage = {
     if (!sb) return;
     const { error } = await sb.from('ds_assets').delete().eq('id', id);
     if (error) console.error('Supabase deleteAsset error:', error);
+  },
+
+  async updateAsset(id, asset) {
+    const sb = this.initSupabase();
+    if (!sb) return;
+    const { error } = await sb.from('ds_assets').upsert({
+      id: id,
+      symbol: asset.symbol,
+      name: asset.name,
+      type: asset.type,
+      category_id: asset.category,
+      quantity: asset.quantity,
+      currency: asset.currency
+    });
+    if (error) console.error('Supabase updateAsset error:', error);
   },
 
   async saveAllAssets(assets) {
