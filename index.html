@@ -189,10 +189,10 @@
     </div>
   </div>
 
-  <!-- Version: 4 — cache buster -->
+  <!-- Version: 5 — cache buster -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=4').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=5').then(reg => {
         // Force update on every load
         reg.update();
       }).catch(() => {});
@@ -208,10 +208,10 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=4"></script>
-  <script src="js/storage.js?v=4"></script>
-  <script src="js/api.js?v=4"></script>
-  <script src="js/charts.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/utils.js?v=5"></script>
+  <script src="js/storage.js?v=5"></script>
+  <script src="js/api.js?v=5"></script>
+  <script src="js/charts.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

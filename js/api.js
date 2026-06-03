@@ -89,19 +89,29 @@ const API = {
     if (!query || query.length < 1) return [];
     const results = [];
 
-    // Always search Finnhub (covers US + HK)
+    // Search Finnhub (covers US + HK stocks/ETFs)
     if (apiKey) {
       try {
         const finnhubResults = await this.searchFinnhub(query, apiKey);
         results.push(...finnhubResults);
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Finnhub search failed:', e);
+      }
+    } else {
+      console.warn('searchAll: no apiKey, skipping Finnhub');
     }
 
-    // Also search CoinGecko for crypto
+    // Search CoinGecko for crypto (with timeout, may rate-limit)
     try {
-      const cryptoResults = await this.searchCoinGecko(query);
+      const cgPromise = this.searchCoinGecko(query);
+      const cryptoResults = await Promise.race([
+        cgPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+      ]);
       results.push(...cryptoResults);
-    } catch (e) {}
+    } catch (e) {
+      console.warn('CoinGecko search failed/skipped:', e.message);
+    }
 
     // Deduplicate by symbol
     const seen = new Set();
