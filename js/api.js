@@ -11,35 +11,25 @@
 
 const API = {
   YAHOO_BASE: 'https://query1.finance.yahoo.com',
-  // CORS proxy fallback chain (corsproxy.io blocks server-side; allorigins works)
-  CORS_PROXIES: [
-    'https://api.allorigins.win/raw?url=',
-    'https://cors-anywhere.herokuapp.com/'
-  ],
+  // CORS proxy — Cloudflare Worker (popoandrew's drew-sop-proxy)
+  CORS_PROXY: 'https://drew-sop-proxy.popoandrew.workers.dev?url=',
 
   async yahooFetch(path) {
     const url = this.YAHOO_BASE + path;
-    // Try direct first
+    // Try direct first (works in non-browser envs / future-proofing)
     try {
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(6000)
       });
       if (!res.ok) throw new Error('Yahoo HTTP ' + res.status);
       return res.json();
     } catch (directErr) {
-      // Try CORS proxies
-      for (let i = 0; i < this.CORS_PROXIES.length; i++) {
-        try {
-          const proxyUrl = this.CORS_PROXIES[i] + encodeURIComponent(url);
-          const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
-          if (!res.ok) continue;
-          return res.json();
-        } catch (proxyErr) {
-          // try next proxy
-        }
-      }
-      throw directErr;
+      // Use Cloudflare Worker CORS proxy (reliable, self-hosted)
+      const proxyUrl = this.CORS_PROXY + encodeURIComponent(url);
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
+      if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
+      return res.json();
     }
   },
 
