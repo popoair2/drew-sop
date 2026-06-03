@@ -15,7 +15,7 @@ const App = {
 
   /** Initialize app */
   async init() {
-    // No API key needed — using Twelve Data (free, 800 calls/day)
+    // No API key needed — using Yahoo Finance (free, all markets) + CoinGecko (crypto)
 
     // Load from Supabase (with localStorage fallback)
     this.assets = await Storage.getAssets();
@@ -61,8 +61,8 @@ const App = {
           // Crypto selected → only search CoinGecko
           results = await API.searchCrypto(q);
         } else {
-          // Stocks/ETFs/forex/cash → search Twelve Data
-          results = await API.searchTwelve(q);
+          // Stocks/ETFs/forex/cash → search Yahoo Finance
+          results = await API.searchYahoo(q);
         }
         if (results.length === 0) {
           searchDD.innerHTML = '<div class="search-empty">搵唔到結果</div>';
