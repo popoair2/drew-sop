@@ -1,17 +1,18 @@
 // Service Worker — Drew-Sop PWA
-const CACHE_NAME = 'drew-sop-v1';
+const CACHE_NAME = 'drew-sop-v2';
+const BASE = '/drew-sop/';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/utils.js',
-  '/js/storage.js',
-  '/js/api.js',
-  '/js/charts.js',
-  '/js/app.js',
-  '/manifest.json',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png'
+  BASE,
+  BASE + 'index.html',
+  BASE + 'css/style.css',
+  BASE + 'js/utils.js',
+  BASE + 'js/storage.js',
+  BASE + 'js/api.js',
+  BASE + 'js/charts.js',
+  BASE + 'js/app.js',
+  BASE + 'manifest.json',
+  BASE + 'assets/icon-192.png',
+  BASE + 'assets/icon-512.png'
 ];
 
 // Install — cache shell
