@@ -337,11 +337,19 @@ const App = {
         const p = this.prices[a.id];
         if (p) groupTotal += this.toHKD(p.price, p.currency, p) * (a.quantity || 0);
       });
+      // Determine text color based on background brightness
+      const hex = group.color.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      const textColor = brightness > 128 ? '#1A1410' : '#FFFFFF';
+
       html += `
         <div class="category-section">
-          <div class="category-header">
-            <h3>${group.name}</h3>
-            <span class="cat-total">${Utils.fmtHKD(groupTotal)}</span>
+          <div class="category-header" style="background:${group.color}; border-bottom-color:${group.color};">
+            <h3 style="color:${textColor};">${group.name}</h3>
+            <span class="cat-total" style="color:${textColor};">${Utils.fmtHKD(groupTotal)}</span>
           </div>
           <table class="asset-table">
             <thead>
