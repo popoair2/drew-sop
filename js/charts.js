@@ -27,7 +27,9 @@ const Charts = {
 
   /** Render/update pie chart */
   renderPie(canvasId, categoryData) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     const labels = categoryData.map(c => c.name);
     const data = categoryData.map(c => c.value);
     const colors = categoryData.map((c, i) => c.color || this.color(i));
@@ -78,9 +80,29 @@ const Charts = {
 
   /** Render/update line chart */
   renderLine(canvasId, snapshots, period) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Handle empty snapshots
+    if (!snapshots || snapshots.length === 0) {
+      // Draw empty state
+      if (this.lineChart) {
+        this.lineChart.destroy();
+        this.lineChart = null;
+      }
+      ctx.save();
+      ctx.fillStyle = '#000000';
+      ctx.font = "600 13px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.4;
+      ctx.fillText('暫無歷史數據', canvas.width / 2, canvas.height / 2);
+      ctx.restore();
+      return;
+    }
 
     // Filter snapshots based on period
+    // Supabase returns: { created_at: "2026-06-04T...", total_value_hkd: 123456, values: {...} }
     const now = new Date();
     let cutoff = new Date();
     if (period === 'day') {
@@ -90,11 +112,32 @@ const Charts = {
     } else if (period === 'year') {
       cutoff.setFullYear(now.getFullYear() - 1);
     }
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-    const filtered = snapshots.filter(s => s.date >= cutoffStr);
-    const labels = filtered.map(s => s.date.slice(5)); // MM-DD
-    const data = filtered.map(s => s.totalValueHKD);
+    const filtered = snapshots.filter(s => {
+      const d = new Date(s.created_at);
+      return d >= cutoff;
+    });
+
+    if (filtered.length === 0) {
+      if (this.lineChart) {
+        this.lineChart.destroy();
+        this.lineChart = null;
+      }
+      ctx.save();
+      ctx.fillStyle = '#000000';
+      ctx.font = "600 13px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.4;
+      ctx.fillText('暫無歷史數據', canvas.width / 2, canvas.height / 2);
+      ctx.restore();
+      return;
+    }
+
+    const labels = filtered.map(s => {
+      const d = new Date(s.created_at);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    });
+    const data = filtered.map(s => s.total_value_hkd);
 
     if (this.lineChart) {
       this.lineChart.destroy();
@@ -111,8 +154,8 @@ const Charts = {
           backgroundColor: 'rgba(184, 233, 134, 0.2)',
           borderWidth: 3,
           fill: true,
-          tension: 0,
-          pointRadius: 0,
+          tension: 0.3,
+          pointRadius: 3,
           pointHitRadius: 10,
           pointHoverRadius: 6,
           pointHoverBackgroundColor: '#000000',

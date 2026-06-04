@@ -1,5 +1,6 @@
 /* ============================================================
    Drew-Sop — Neo-Brutalist Bento Asset Dashboard
+   Reference: Binance Earn / Crypto.com style
    ============================================================ */
 
 /* --- RESET & BASE --- */
@@ -16,15 +17,16 @@
   --gray-mid: #888888;
   --gray-dark: #333333;
 
-  /* Bento card colors */
-  --card-green: #B8E986;    /* 主數據 */
-  --card-yellow: #F5D76E;   /* 增長圖表 */
-  --card-purple: #C7A8E8;   /* 互動數據 */
+  /* Bento card colors — brighter, more saturated */
+  --card-green: #A8E063;    /* 主數據 / header */
+  --card-yellow: #FFD93D;   /* 增長圖表 */
+  --card-purple: #C084FC;   /* 互動數據 */
   --card-orange: #FF6B6B;   /* 帳戶設定 */
-  --card-blue: #7EC8E3;     /* 持倉明細 */
-  --card-pink: #FFB6C1;     /* 額外 */
+  --card-blue: #60A5FA;     /* 持倉明細 */
+  --card-pink: #F472B6;     /* 額外 */
+  --card-teal: #2DD4BF;     /* 額外 */
 
-  --radius: 24px;
+  --radius: 20px;
   --radius-pill: 50px;
   --font: 'Space Grotesk', 'Helvetica Neue', sans-serif;
 }
@@ -46,10 +48,10 @@ body {
 
 /* --- HEADER --- */
 .header {
-  padding: 24px 32px;
-  border-bottom: 2px solid var(--gray-dark);
-  /* Stretch into safe area on top */
-  padding-top: max(24px, env(safe-area-inset-top));
+  background: var(--card-green);
+  color: var(--black);
+  padding: 20px 28px;
+  padding-top: max(20px, env(safe-area-inset-top));
 }
 
 .header-inner {
@@ -59,14 +61,14 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .logo {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 4px;
-  color: var(--white);
+  color: var(--black);
 }
 
 .header-right {
@@ -76,38 +78,40 @@ body {
 }
 
 .total-value-card {
-  background: var(--card-green);
+  background: rgba(0,0,0,0.15);
   color: var(--black);
-  padding: 12px 24px;
+  padding: 14px 28px;
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  min-width: 200px;
 }
 
 .total-value-card .label {
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: 0.6rem;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
+  opacity: 0.7;
 }
 
 .total-value-card .value {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 /* --- BUTTONS --- */
 .btn-pill {
   font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   padding: 10px 24px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--white);
+  border: 2px solid var(--black);
   background: transparent;
-  color: var(--white);
+  color: var(--black);
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -115,18 +119,18 @@ body {
 }
 
 .btn-pill:hover {
-  background: var(--white);
-  color: var(--black);
+  background: var(--black);
+  color: var(--card-green);
 }
 
 .btn-pill.btn-primary {
-  background: var(--white);
-  color: var(--black);
-  border-color: var(--white);
+  background: var(--black);
+  color: var(--card-green);
+  border-color: var(--black);
 }
 
 .btn-pill.btn-primary:hover {
-  background: var(--gray-light);
+  background: var(--gray-dark);
 }
 
 .btn-pill.btn-danger {
@@ -143,9 +147,9 @@ body {
 .change-bar {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 16px 28px;
   display: flex;
-  gap: 32px;
+  gap: 28px;
   align-items: center;
   border-bottom: 2px solid var(--gray-dark);
 }
@@ -165,7 +169,7 @@ body {
 }
 
 .change-value {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -185,7 +189,7 @@ body {
 .bento-grid {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 32px;
+  padding: 24px 28px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: minmax(120px, auto);
@@ -198,16 +202,17 @@ body {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   border: none;
 }
 
 .bento-card .card-title {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--black);
+  opacity: 0.8;
 }
 
 /* Card color variants */
@@ -306,39 +311,36 @@ body {
 .asset-table th {
   text-align: left;
   font-size: 0.6rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--black);
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-bottom: 1px solid rgba(0,0,0,0.2);
+  opacity: 0.7;
 }
 
 .asset-table td {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--black);
-  padding: 6px 8px;
+  padding: 8px 8px;
   border-bottom: 1px solid rgba(0,0,0,0.1);
   vertical-align: middle;
 }
 
 .asset-table td.symbol {
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .asset-table td.price {
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .asset-table td.value {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.asset-table td.change {
-  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -348,8 +350,8 @@ body {
 
 .asset-table td.actions button {
   font-family: var(--font);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 700;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--black);
@@ -423,7 +425,7 @@ body {
 .form-group label {
   display: block;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 6px;
@@ -564,114 +566,11 @@ body {
   40% { opacity: 1; }
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 1024px) {
-  .bento-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .card-pie, .card-line {
-    grid-column: span 2;
-  }
-  .card-assets, .card-settings {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 640px) {
-  .header {
-    padding: 12px 16px;
-  }
-  .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .header-right {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .total-value-card {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px;
-  }
-  .total-value-card .value {
-    font-size: 1.3rem;
-  }
-  .bento-grid {
-    padding: 12px;
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .card-pie, .card-line, .card-assets, .card-settings {
-    grid-column: span 1;
-    grid-row: auto;
-  }
-  .change-bar {
-    padding: 10px 12px;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .change-value {
-    font-size: 1.1rem;
-  }
-  .last-update {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 4px;
-    text-align: left;
-  }
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  /* Asset table: horizontal scroll */
-  .card-assets {
-    overflow-x: auto;
-  }
-  .asset-table {
-    min-width: 500px;
-  }
-  .asset-table th,
-  .asset-table td {
-    padding: 4px 6px;
-    font-size: 0.75rem;
-  }
-  .asset-table td.symbol {
-    font-size: 0.8rem;
-  }
-  /* Modal full width on mobile */
-  .modal {
-    padding: 20px;
-    max-width: 100%;
-    border-radius: 16px;
-  }
-  .modal-title {
-    font-size: 1rem;
-  }
-  /* Settings buttons full width */
-  .settings-group {
-    flex-direction: column;
-  }
-  .settings-group .btn-pill {
-    width: 100%;
-    text-align: center;
-  }
-  /* Error bar */
-  .error-bar {
-    padding: 8px 12px;
-    font-size: 0.7rem;
-  }
-}
-
 /* --- ERROR BAR --- */
 .error-bar {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 10px 32px;
+  padding: 10px 28px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -718,7 +617,7 @@ body {
 .period-btn {
   font-family: var(--font);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   padding: 6px 16px;
   border-radius: var(--radius-pill);
   border: 2px solid var(--black);
@@ -828,3 +727,111 @@ body {
   letter-spacing: 1px;
 }
 
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .card-pie, .card-line {
+    grid-column: span 2;
+  }
+  .card-assets, .card-settings {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .header-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .total-value-card {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    min-width: auto;
+  }
+  .total-value-card .value {
+    font-size: 1.4rem;
+  }
+  .bento-grid {
+    padding: 12px 16px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .card-pie, .card-line, .card-assets, .card-settings {
+    grid-column: span 1;
+    grid-row: auto;
+  }
+  .change-bar {
+    padding: 10px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .change-value {
+    font-size: 1.2rem;
+  }
+  .last-update {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 4px;
+    text-align: left;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  /* Asset table: horizontal scroll */
+  .card-assets {
+    overflow-x: auto;
+    padding: 16px;
+  }
+  .asset-table {
+    min-width: 500px;
+  }
+  .asset-table th,
+  .asset-table td {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  .asset-table td.symbol {
+    font-size: 0.8rem;
+  }
+  /* Modal full width on mobile */
+  .modal {
+    padding: 20px;
+    max-width: 100%;
+    border-radius: 16px;
+  }
+  .modal-title {
+    font-size: 1rem;
+  }
+  /* Settings buttons full width */
+  .settings-group {
+    flex-direction: column;
+  }
+  .settings-group .btn-pill {
+    width: 100%;
+    text-align: center;
+  }
+  /* Error bar */
+  .error-bar {
+    padding: 8px 12px;
+    font-size: 0.7rem;
+  }
+}
