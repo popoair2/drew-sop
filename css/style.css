@@ -579,25 +579,91 @@ body {
 
 @media (max-width: 640px) {
   .header {
-    padding: 16px;
+    padding: 12px 16px;
   }
   .header-inner {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+  }
+  .header-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .total-value-card {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+  }
+  .total-value-card .value {
+    font-size: 1.3rem;
   }
   .bento-grid {
-    padding: 16px;
+    padding: 12px;
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   .card-pie, .card-line, .card-assets, .card-settings {
     grid-column: span 1;
+    grid-row: auto;
   }
   .change-bar {
-    padding: 12px 16px;
-    gap: 16px;
+    padding: 10px 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .change-value {
+    font-size: 1.1rem;
+  }
+  .last-update {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 4px;
+    text-align: left;
   }
   .form-row {
     grid-template-columns: 1fr;
+  }
+  /* Asset table: horizontal scroll */
+  .card-assets {
+    overflow-x: auto;
+  }
+  .asset-table {
+    min-width: 500px;
+  }
+  .asset-table th,
+  .asset-table td {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  .asset-table td.symbol {
+    font-size: 0.8rem;
+  }
+  /* Modal full width on mobile */
+  .modal {
+    padding: 20px;
+    max-width: 100%;
+    border-radius: 16px;
+  }
+  .modal-title {
+    font-size: 1rem;
+  }
+  /* Settings buttons full width */
+  .settings-group {
+    flex-direction: column;
+  }
+  .settings-group .btn-pill {
+    width: 100%;
+    text-align: center;
+  }
+  /* Error bar */
+  .error-bar {
+    padding: 8px 12px;
+    font-size: 0.7rem;
   }
 }
 
