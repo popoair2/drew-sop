@@ -30,7 +30,14 @@ const Charts = {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const labels = categoryData.map(c => c.name);
+
+    const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+
+    // Build labels with percentage
+    const labels = categoryData.map(c => {
+      const pct = total > 0 ? ((c.value / total) * 100).toFixed(1) : '0.0';
+      return `${c.name} ${pct}%`;
+    });
     const data = categoryData.map(c => c.value);
     const colors = categoryData.map((c, i) => c.color || this.color(i));
 
@@ -53,7 +60,7 @@ const Charts = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '60%',
+        cutout: '55%',
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -67,7 +74,6 @@ const Charts = {
             callbacks: {
               label: (ctx) => {
                 const val = ctx.parsed;
-                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                 const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
                 return ` HK$${Utils.fmt(val)} (${pct}%)`;
               }

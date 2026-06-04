@@ -156,10 +156,11 @@ const Storage = {
     if (!sb) return [];
     const since = new Date();
     since.setDate(since.getDate() - days);
+    const sinceStr = since.toISOString().slice(0, 10);
     const { data, error } = await sb.from('ds_snapshots')
       .select('*')
-      .gte('created_at', since.toISOString())
-      .order('created_at');
+      .gte('date', sinceStr)
+      .order('date');
     if (error) {
       console.error('Supabase getSnapshots error:', error);
       return [];
@@ -207,10 +208,11 @@ const Storage = {
   async saveDailySnapshot(totalHKD, assetValues) {
     const sb = this.initSupabase();
     if (!sb) return;
+    const today = new Date().toISOString().slice(0, 10);
     const snapshot = {
+      date: today,
       total_value_hkd: totalHKD,
-      values: assetValues,
-      created_at: new Date().toISOString()
+      asset_values: assetValues
     };
     const { error } = await sb.from('ds_snapshots').insert(snapshot);
     if (error) console.error('Supabase saveDailySnapshot error:', error);
