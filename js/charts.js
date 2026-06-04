@@ -6,18 +6,18 @@ const Charts = {
   pieChart: null,
   lineChart: null,
 
-  /** Color palette for categories (Neo-Brutalist) */
+  /** Color palette for categories (Retro-Futuristic) */
   categoryColors: [
-    '#B8E986', // green
-    '#F5D76E', // yellow
-    '#C7A8E8', // purple
-    '#FF6B6B', // orange-red
-    '#7EC8E3', // blue
-    '#FFB6C1', // pink
-    '#87CEEB', // sky
-    '#DDA0DD', // plum
-    '#98FB98', // pale green
-    '#F0E68C', // khaki
+    '#E8735A', // coral
+    '#D4A843', // mustard
+    '#E07A3A', // orange
+    '#C084FC', // purple (muted)
+    '#60A5FA', // blue (muted)
+    '#F472B6', // pink (muted)
+    '#2DD4BF', // teal
+    '#F08C72', // salmon
+    '#A8E063', // green (muted)
+    '#FFD93D', // yellow (muted)
   ],
 
   /** Get color by index */
@@ -52,8 +52,8 @@ const Charts = {
         datasets: [{
           data,
           backgroundColor: colors,
-          borderColor: '#000000',
-          borderWidth: 2,
+          borderColor: '#1A1410',
+          borderWidth: 2.5,
           hoverOffset: 8
         }]
       },
@@ -64,13 +64,13 @@ const Charts = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#000000',
-            titleColor: '#FFFFFF',
-            bodyColor: '#FFFFFF',
-            borderColor: '#FFFFFF',
+            backgroundColor: '#1A1410',
+            titleColor: '#F5F0E8',
+            bodyColor: '#F5F0E8',
+            borderColor: '#F5F0E8',
             borderWidth: 2,
-            cornerRadius: 12,
-            padding: 12,
+            cornerRadius: 14,
+            padding: 14,
             callbacks: {
               label: (ctx) => {
                 const val = ctx.parsed;
@@ -98,7 +98,7 @@ const Charts = {
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#1A1410';
       ctx.font = "600 13px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.4;
@@ -130,7 +130,7 @@ const Charts = {
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#1A1410';
       ctx.font = "600 13px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.4;
@@ -156,17 +156,17 @@ const Charts = {
         datasets: [{
           label: '總資產 (HKD)',
           data,
-          borderColor: '#000000',
-          backgroundColor: 'rgba(184, 233, 134, 0.2)',
+          borderColor: '#1A1410',
+          backgroundColor: 'rgba(232, 115, 90, 0.15)',
           borderWidth: 3,
           fill: true,
           tension: 0.3,
-          pointRadius: 3,
-          pointHitRadius: 10,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#000000',
-          pointHoverBorderColor: '#FFFFFF',
-          pointHoverBorderWidth: 2
+          pointRadius: 4,
+          pointHitRadius: 12,
+          pointHoverRadius: 7,
+          pointHoverBackgroundColor: '#1A1410',
+          pointHoverBorderColor: '#F5F0E8',
+          pointHoverBorderWidth: 2.5
         }]
       },
       options: {
@@ -179,13 +179,13 @@ const Charts = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#000000',
-            titleColor: '#FFFFFF',
-            bodyColor: '#FFFFFF',
-            borderColor: '#FFFFFF',
+            backgroundColor: '#1A1410',
+            titleColor: '#F5F0E8',
+            bodyColor: '#F5F0E8',
+            borderColor: '#F5F0E8',
             borderWidth: 2,
-            cornerRadius: 12,
-            padding: 12,
+            cornerRadius: 14,
+            padding: 14,
             callbacks: {
               label: (ctx) => ` HK$${Utils.fmt(ctx.parsed.y)}`
             }
@@ -195,16 +195,16 @@ const Charts = {
           x: {
             grid: { display: false },
             ticks: {
-              color: '#000000',
-              font: { family: "'Space Grotesk', sans-serif", size: 11 },
+              color: '#1A1410',
+              font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
               maxTicksLimit: 8
             }
           },
           y: {
-            grid: { color: 'rgba(0,0,0,0.1)' },
+            grid: { color: 'rgba(26,20,16,0.08)' },
             ticks: {
-              color: '#000000',
-              font: { family: "'Space Grotesk', sans-serif", size: 11 },
+              color: '#1A1410',
+              font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
               callback: (v) => '$' + Utils.fmt(v)
             }
           }
