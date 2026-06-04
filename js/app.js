@@ -134,12 +134,6 @@ const App = {
     document.getElementById('btnCloseCategories').addEventListener('click', () => this.closeModal('modalCategories'));
     document.getElementById('formAddCategory').addEventListener('submit', (e) => { e.preventDefault(); this.addCategory(); });
 
-    document.getElementById('btnClearData').addEventListener('click', () => {
-      if (confirm('確定要清除所有數據？此操作無法復原。')) {
-        Storage.clearAll().then(() => location.reload());
-      }
-    });
-
     document.getElementById('formApiKey').addEventListener('submit', (e) => {
       e.preventDefault();
       const key = document.getElementById('inputApiKey').value.trim();
