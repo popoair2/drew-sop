@@ -576,12 +576,63 @@ const App = {
   renderCategoryList() {
     const container = document.getElementById('categoryList');
     container.innerHTML = this.categories.map(cat => `
-      <div class="cat-manage-item">
+      <div class="cat-manage-item" data-id="${cat.id}">
         <span class="cat-color" style="background:${cat.color};"></span>
         <span class="cat-name">${cat.name}</span>
+        <button class="btn-edit-cat" onclick="App.editCategory('${cat.id}')">編輯</button>
         <button class="btn-delete-cat" onclick="App.deleteCategory('${cat.id}')">刪除</button>
       </div>
     `).join('');
+  },
+
+  editCategory(id) {
+    const cat = this.categories.find(c => c.id === id);
+    if (!cat) return;
+
+    const item = document.querySelector(`.cat-manage-item[data-id="${id}"]`);
+    if (!item) return;
+
+    item.innerHTML = `
+      <input type="color" value="${cat.color}" class="edit-color" style="width:36px;height:36px;border:2px solid #1A1410;border-radius:50%;cursor:pointer;padding:2px;">
+      <input type="text" value="${cat.name}" class="edit-name" style="flex:1;font-family:var(--font);font-size:0.85rem;font-weight:700;padding:8px 12px;border:2px solid var(--taupe);border-radius:12px;background:var(--cream);color:var(--espresso);outline:none;text-transform:uppercase;letter-spacing:1px;">
+      <button class="btn-save-cat" onclick="App.saveCategoryEdit('${id}')" style="font-family:var(--font);font-size:0.65rem;font-weight:700;padding:6px 14px;border-radius:var(--radius-pill);border:2px solid #1A1410;background:#1A1410;color:var(--cream);cursor:pointer;text-transform:uppercase;letter-spacing:1px;">儲存</button>
+      <button class="btn-cancel-cat" onclick="App.cancelCategoryEdit('${id}')" style="font-family:var(--font);font-size:0.65rem;font-weight:700;padding:6px 14px;border-radius:var(--radius-pill);border:2px solid var(--taupe);background:transparent;color:var(--espresso);cursor:pointer;text-transform:uppercase;letter-spacing:1px;">取消</button>
+    `;
+  },
+
+  async saveCategoryEdit(id) {
+    const item = document.querySelector(`.cat-manage-item[data-id="${id}"]`);
+    if (!item) return;
+
+    const name = item.querySelector('.edit-name').value.trim();
+    const color = item.querySelector('.edit-color').value;
+
+    if (!name) return;
+
+    // Update in Supabase
+    const sb = Storage.initSupabase();
+    if (sb) {
+      const { error } = await sb.from('ds_categories').update({ name, color }).eq('id', id);
+      if (error) {
+        console.error('Supabase updateCategory error:', error);
+        return;
+      }
+    }
+
+    // Update local state
+    const cat = this.categories.find(c => c.id === id);
+    if (cat) {
+      cat.name = name;
+      cat.color = color;
+    }
+
+    // Re-render
+    this.renderCategoryList();
+    this.render();
+  },
+
+  cancelCategoryEdit(id) {
+    this.renderCategoryList();
   },
 
   async addCategory() {

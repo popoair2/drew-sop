@@ -549,6 +549,25 @@ body {
   color: var(--cream);
 }
 
+.cat-manage-item .btn-edit-cat {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--espresso);
+  background: transparent;
+  color: var(--espresso);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cat-manage-item .btn-edit-cat:hover {
+  background: var(--espresso);
+  color: var(--cream);
+}
+
 /* --- LOADING / EMPTY STATES --- */
 .empty-state {
   text-align: center;
