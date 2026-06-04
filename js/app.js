@@ -444,7 +444,7 @@ const App = {
       return;
     }
     if (this.fetchErrors.length > 0) {
-      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">部分資產更新失敗: ${this.fetchErrors.map(e => e.symbol).join(', ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">✕</button>`;
+      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">部分資產更新失敗: ${this.fetchErrors.map(e => e.symbol + ' (' + e.error + ')').join(', ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">✕</button>`;
     }
   },
 

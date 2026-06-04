@@ -11,26 +11,53 @@
 
 const API = {
   YAHOO_BASE: 'https://query1.finance.yahoo.com',
-  // CORS proxy — Cloudflare Worker (popoandrew's drew-sop-proxy)
-  CORS_PROXY: 'https://drew-sop-proxy.popoandrew.workers.dev?url=',
+
+  // CORS proxy chain — tried in order. Each entry: full URL with TARGET placeholder.
+  CORS_PROXIES: [
+    'https://drew-sop-proxy.popoandrew.workers.dev?url=TARGET',
+    'https://api.allorigins.win/raw?url=TARGET',
+    'https://corsproxy.io/?TARGET',
+    'https://api.codetabs.com/v1/proxy?quest=TARGET',
+  ],
 
   async yahooFetch(path) {
     const url = this.YAHOO_BASE + path;
-    // Try direct first (works in non-browser envs / future-proofing)
+
+    // 1. Try direct first (works on desktop / some networks)
     try {
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
         signal: AbortSignal.timeout(6000)
       });
       if (!res.ok) throw new Error('Yahoo HTTP ' + res.status);
       return res.json();
     } catch (directErr) {
-      // Use Cloudflare Worker CORS proxy (reliable, self-hosted)
-      const proxyUrl = this.CORS_PROXY + encodeURIComponent(url);
-      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
-      if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
-      return res.json();
+      console.warn('Yahoo direct fetch failed, trying CORS proxies:', directErr.message);
     }
+
+    // 2. Try each CORS proxy in sequence
+    for (let i = 0; i < this.CORS_PROXIES.length; i++) {
+      const proxyUrl = this.CORS_PROXIES[i].replace('TARGET', encodeURIComponent(url));
+      try {
+        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
+        const data = await res.json();
+        // Validate it looks like Yahoo response
+        if (data && data.chart) {
+          console.log('CORS proxy #' + (i + 1) + ' succeeded:', this.CORS_PROXIES[i]);
+          return data;
+        }
+        throw new Error('Invalid response shape');
+      } catch (proxyErr) {
+        console.warn('CORS proxy #' + (i + 1) + ' failed:', proxyErr.message);
+      }
+    }
+
+    throw new Error('All Yahoo Finance fetch methods failed (direct + ' + this.CORS_PROXIES.length + ' proxies)');
   },
 
   /** Search Yahoo Finance for symbols (stocks + ETFs) */
