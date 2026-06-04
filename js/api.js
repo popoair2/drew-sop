@@ -116,7 +116,9 @@ const API = {
     if (!price || price === 0) throw new Error('Zero price for ' + symbol);
     return {
       price: price,
-      currency: meta.currency || this.inferCurrency(symbol)
+      currency: meta.currency || this.inferCurrency(symbol),
+      dividendYield: meta.dividendYield || null,
+      trailingAnnualDividendRate: meta.trailingAnnualDividendRate || null
     };
   },
 

@@ -354,7 +354,7 @@ const App = {
           <table class="asset-table">
             <thead>
               <tr>
-                <th>代號</th><th>名稱</th><th>數量</th><th>價格</th><th>價值 (HKD)</th><th></th>
+                <th>代號</th><th>名稱</th><th>數量</th><th>價格</th><th>息率</th><th>價值 (HKD)</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -363,12 +363,22 @@ const App = {
                 const priceStr = p ? `${Utils.currencySymbol(p.currency)}${Utils.fmt(p.price)}` : '<span class="loading-dots"><span></span><span></span><span></span></span>';
                 const priceHKD = p ? this.toHKD(p.price, p.currency, p) : 0;
                 const valueHKD = priceHKD * (asset.quantity || 0);
+                // Show dividend yield if available (only for stocks/ETFs, not crypto/cash)
+                let yieldStr = '—';
+                if (p && p.dividendYield != null && p.dividendYield > 0) {
+                  yieldStr = (p.dividendYield * 100).toFixed(2) + '%';
+                } else if (p && p.trailingAnnualDividendRate != null && p.trailingAnnualDividendRate > 0 && p.price > 0) {
+                  // Calculate yield from annual dividend rate / price
+                  const calcYield = (p.trailingAnnualDividendRate / p.price * 100);
+                  yieldStr = calcYield.toFixed(2) + '%';
+                }
                 return `
                   <tr>
                     <td class="symbol">${asset.symbol}</td>
                     <td>${asset.name}</td>
                     <td>${Utils.fmt(asset.quantity, 4)}</td>
                     <td class="price">${priceStr}</td>
+                    <td class="yield">${yieldStr}</td>
                     <td class="value">${p ? Utils.fmtHKD(valueHKD) : '—'}</td>
                     <td class="actions">
                       <button onclick="App.editAsset('${asset.id}')">編輯</button>
