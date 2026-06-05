@@ -363,9 +363,12 @@ const App = {
                 const priceStr = p ? `${Utils.currencySymbol(p.currency)}${Utils.fmt(p.price)}` : '<span class="loading-dots"><span></span><span></span><span></span></span>';
                 const priceHKD = p ? this.toHKD(p.price, p.currency, p) : 0;
                 const valueHKD = priceHKD * (asset.quantity || 0);
-                // Show dividend yield if available (only for stocks/ETFs, not crypto/cash)
+                // Show dividend yield — prefer manual asset value, fall back to API data
                 let yieldStr = '—';
-                if (p && p.dividendYield != null && p.dividendYield > 0) {
+                const manualYield = asset.dividendYield != null ? parseFloat(asset.dividendYield) : 0;
+                if (manualYield > 0) {
+                  yieldStr = manualYield.toFixed(2) + '%';
+                } else if (p && p.dividendYield != null && p.dividendYield > 0) {
                   yieldStr = (p.dividendYield * 100).toFixed(2) + '%';
                 } else if (p && p.trailingAnnualDividendRate != null && p.trailingAnnualDividendRate > 0 && p.price > 0) {
                   // Calculate yield from annual dividend rate / price
@@ -535,6 +538,7 @@ const App = {
       document.getElementById('inputCategory').value = asset.category || '';
       document.getElementById('inputQuantity').value = asset.quantity;
       document.getElementById('inputCurrency').value = asset.currency || 'USD';
+      document.getElementById('inputDividendYield').value = asset.dividendYield || 0;
       form.dataset.editId = asset.id;
     } else {
       document.getElementById('modalAssetTitle').textContent = '新增資產';
@@ -552,7 +556,8 @@ const App = {
       type: document.getElementById('inputType').value,
       category: document.getElementById('inputCategory').value,
       quantity: parseFloat(document.getElementById('inputQuantity').value) || 0,
-      currency: document.getElementById('inputCurrency').value
+      currency: document.getElementById('inputCurrency').value,
+      dividendYield: parseFloat(document.getElementById('inputDividendYield').value) || 0
     };
     if (editId) {
       await Storage.updateAsset(editId, asset);

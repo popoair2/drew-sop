@@ -85,7 +85,8 @@ const Storage = {
       type: a.type,
       category: a.category_id,
       quantity: parseFloat(a.quantity) || 0,
-      currency: a.currency
+      currency: a.currency,
+      dividendYield: parseFloat(a.dividend_yield) || 0
     }));
   },
 
@@ -100,7 +101,8 @@ const Storage = {
       type: asset.type,
       category_id: asset.category,
       quantity: asset.quantity,
-      currency: asset.currency
+      currency: asset.currency,
+      dividend_yield: asset.dividendYield || 0
     });
     if (error) console.error('Supabase addAsset error:', error);
     return id;
@@ -127,7 +129,8 @@ const Storage = {
       type: asset.type,
       category_id: asset.category,
       quantity: asset.quantity,
-      currency: asset.currency
+      currency: asset.currency,
+      dividend_yield: asset.dividendYield || 0
     });
     if (error) console.error('Supabase updateAsset error:', error);
   },

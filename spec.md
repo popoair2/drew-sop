@@ -87,9 +87,11 @@
   "type": "us_stock",
   "category": "自定義分類ID",
   "quantity": 10,
-  "currency": "USD"
+  "currency": "USD",
+  "dividendYield": 0.5
 }
 ```
+> `dividendYield` 為手動輸入（百分比，例如 0.5 表示 0.5%）。預設值 0，純粹顯示用途，唔影響資產價值計算。
 ### Category
 ```json
 {
