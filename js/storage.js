@@ -85,8 +85,7 @@ const Storage = {
       type: a.type,
       category: a.category_id,
       quantity: parseFloat(a.quantity) || 0,
-      currency: a.currency,
-      dividendYield: parseFloat(a.dividend_yield) || 0
+      currency: a.currency
     }));
   },
 
@@ -101,10 +100,12 @@ const Storage = {
       type: asset.type,
       category_id: asset.category,
       quantity: asset.quantity,
-      currency: asset.currency,
-      dividend_yield: asset.dividendYield || 0
+      currency: asset.currency
     });
-    if (error) console.error('Supabase addAsset error:', error);
+    if (error) {
+      console.error('Supabase addAsset error:', error);
+      throw error;
+    }
     return id;
   },
 
@@ -122,17 +123,18 @@ const Storage = {
   async updateAsset(id, asset) {
     const sb = this.initSupabase();
     if (!sb) return;
-    const { error } = await sb.from('ds_assets').upsert({
-      id: id,
+    const { error } = await sb.from('ds_assets').update({
       symbol: asset.symbol,
       name: asset.name,
       type: asset.type,
       category_id: asset.category,
       quantity: asset.quantity,
-      currency: asset.currency,
-      dividend_yield: asset.dividendYield || 0
-    });
-    if (error) console.error('Supabase updateAsset error:', error);
+      currency: asset.currency
+    }).eq('id', id);
+    if (error) {
+      console.error('Supabase updateAsset error:', error);
+      throw error;
+    }
   },
 
   async saveAllAssets(assets) {
@@ -141,6 +143,30 @@ const Storage = {
     for (const asset of assets) {
       await this.saveAsset(asset);
     }
+  },
+
+  // =============================================
+  // DIVIDEND YIELD (localStorage fallback — Supabase column may not exist yet)
+  // =============================================
+
+  getDividendYields() {
+    try {
+      return JSON.parse(localStorage.getItem('ds_dividend_yields') || '{}');
+    } catch (e) {
+      return {};
+    }
+  },
+
+  async saveDividendYield(assetId, yieldValue) {
+    const yields = this.getDividendYields();
+    yields[assetId] = yieldValue;
+    localStorage.setItem('ds_dividend_yields', JSON.stringify(yields));
+  },
+
+  async removeDividendYield(assetId) {
+    const yields = this.getDividendYields();
+    delete yields[assetId];
+    localStorage.setItem('ds_dividend_yields', JSON.stringify(yields));
   },
 
   // =============================================

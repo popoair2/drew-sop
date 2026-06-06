@@ -22,6 +22,7 @@ const App = {
     this.categories = await Storage.getCategories();
     this.prices = Storage.getPrices();
     this.snapshots = await Storage.getSnapshots();
+    this.dividendYields = Storage.getDividendYields();
 
     // Migrate any existing local data to Supabase
     await Storage.migrateLocalToSupabase();
@@ -363,10 +364,10 @@ const App = {
                 const priceStr = p ? `${Utils.currencySymbol(p.currency)}${Utils.fmt(p.price)}` : '<span class="loading-dots"><span></span><span></span><span></span></span>';
                 const priceHKD = p ? this.toHKD(p.price, p.currency, p) : 0;
                 const valueHKD = priceHKD * (asset.quantity || 0);
-                // Show dividend yield — prefer manual asset value, fall back to API data
+                // Show dividend yield — prefer manual localStorage value, fall back to API data
                 let yieldStr = '—';
-                const manualYield = asset.dividendYield != null ? parseFloat(asset.dividendYield) : 0;
-                if (manualYield > 0) {
+                const manualYield = this.dividendYields[asset.id] != null ? parseFloat(this.dividendYields[asset.id]) : null;
+                if (manualYield != null && manualYield > 0) {
                   yieldStr = manualYield.toFixed(2) + '%';
                 } else if (p && p.dividendYield != null && p.dividendYield > 0) {
                   yieldStr = (p.dividendYield * 100).toFixed(2) + '%';
@@ -538,7 +539,7 @@ const App = {
       document.getElementById('inputCategory').value = asset.category || '';
       document.getElementById('inputQuantity').value = asset.quantity;
       document.getElementById('inputCurrency').value = asset.currency || 'USD';
-      document.getElementById('inputDividendYield').value = asset.dividendYield || 0;
+      document.getElementById('inputDividendYield').value = this.dividendYields[asset.id] || '';
       form.dataset.editId = asset.id;
     } else {
       document.getElementById('modalAssetTitle').textContent = '新增資產';
@@ -550,23 +551,33 @@ const App = {
   async saveAsset() {
     const form = document.getElementById('formAsset');
     const editId = form.dataset.editId;
+    const dividendYield = parseFloat(document.getElementById('inputDividendYield').value) || 0;
     const asset = {
       symbol: document.getElementById('inputSymbol').value.trim().toUpperCase(),
       name: document.getElementById('inputName').value.trim(),
       type: document.getElementById('inputType').value,
       category: document.getElementById('inputCategory').value,
       quantity: parseFloat(document.getElementById('inputQuantity').value) || 0,
-      currency: document.getElementById('inputCurrency').value,
-      dividendYield: parseFloat(document.getElementById('inputDividendYield').value) || 0
+      currency: document.getElementById('inputCurrency').value
     };
-    if (editId) {
-      await Storage.updateAsset(editId, asset);
-    } else {
-      await Storage.addAsset(asset);
+    try {
+      if (editId) {
+        await Storage.updateAsset(editId, asset);
+        await Storage.saveDividendYield(editId, dividendYield);
+        this.dividendYields[editId] = dividendYield;
+      } else {
+        const newId = await Storage.addAsset(asset);
+        if (newId) {
+          await Storage.saveDividendYield(newId, dividendYield);
+          this.dividendYields[newId] = dividendYield;
+        }
+      }
+      this.assets = await Storage.getAssets();
+      this.closeModal('modalAsset');
+      this.render();
+    } catch (err) {
+      alert('儲存失敗: ' + err.message);
     }
-    this.assets = await Storage.getAssets();
-    this.closeModal('modalAsset');
-    this.render();
   },
 
   async editAsset(id) {
@@ -577,6 +588,8 @@ const App = {
   async deleteAsset(id) {
     if (confirm('確定要刪除此資產？')) {
       await Storage.deleteAsset(id);
+      await Storage.removeDividendYield(id);
+      delete this.dividendYields[id];
       this.assets = await Storage.getAssets();
       this.render();
     }
