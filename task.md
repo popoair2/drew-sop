@@ -39,13 +39,15 @@ Andrew 手動加股息率，因為 API 拎唔到。每種資產都要可以入�
 - [x] Category headers use assigned color
 - [x] Remove clear all data button
 - [x] Retro-futuristic industrial dashboard redesign
+- [x] **Fix Bug 1**: 手動派息率無顯示 — Supabase `dividend_yield` column missing, added localStorage fallback
+- [x] **Fix Bug 2**: 資產 edit 儲存後無更改 — `updateAsset` using `.upsert()` caused duplicate key error, changed to `.update().eq()`
+- [x] **Fix Bug 3**: 新增唔到資產 — `addAsset` sending `dividend_yield` to non-existent column, removed from payload
 
 ### In Progress
-- [ ] Add manual dividend yield input field to edit asset modal
+- [ ] Testing in browser
 
 ### Pending
-- [ ] Testing in browser
-- [ ] Deploy to GitHub Pages
+- [ ] Deploy to GitHub Pages (pushed, waiting for GitHub Pages refresh)
 - [ ] Andrew to provide Finnhub API key for live testing
 - [ ] GitHub repo setup + Pages deploy
 - [ ] Iteration based on feedback
