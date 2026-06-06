@@ -25,8 +25,8 @@ const Charts = {
     return this.categoryColors[i % this.categoryColors.length];
   },
 
-  /** Render/update pie chart */
-  renderPie(canvasId, categoryData) {
+  /** Render/update pie chart with inline percentage labels + dividend yield in legend */
+  renderPie(canvasId, categoryData, dividendYields) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -45,6 +45,53 @@ const Charts = {
       this.pieChart.destroy();
     }
 
+    // Custom plugin: draw percentage labels on each slice
+    const sliceLabelPlugin = {
+      id: 'sliceLabels',
+      afterDraw(chart) {
+        const { ctx, data } = chart;
+        const dataset = data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        const total = dataset.data.reduce((a, b) => a + b, 0);
+        if (total === 0) return;
+
+        ctx.save();
+        for (let i = 0; i < meta.data.length; i++) {
+          const slice = meta.data[i];
+          const value = dataset.data[i];
+          if (value === 0) continue;
+          const pct = ((value / total) * 100).toFixed(1);
+
+          // Calculate label position: midpoint of each arc
+          const startAngle = slice.startAngle;
+          const endAngle = slice.endAngle;
+          const midAngle = (startAngle + endAngle) / 2;
+          const r = slice.innerRadius + (slice.outerRadius - slice.innerRadius) * 0.55;
+          const x = slice.x + Math.cos(midAngle) * r;
+          const y = slice.y + Math.sin(midAngle) * r;
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = "700 14px 'Space Grotesk', 'Helvetica Neue', sans-serif";
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          // Draw text shadow for readability
+          ctx.shadowColor = 'rgba(26, 20, 16, 0.6)';
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+
+          ctx.fillText(pct + '%', x, y);
+
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        }
+        ctx.restore();
+      }
+    };
+
     this.pieChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -60,7 +107,7 @@ const Charts = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '55%',
+        cutout: '40%',
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -80,7 +127,8 @@ const Charts = {
             }
           }
         }
-      }
+      },
+      plugins: [sliceLabelPlugin]
     });
   },
 

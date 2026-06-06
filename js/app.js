@@ -407,24 +407,42 @@ const App = {
       return;
     }
     const catValues = {};
-    this.categories.forEach(cat => { catValues[cat.id] = { name: cat.name, color: cat.color, value: 0 }; });
+    this.categories.forEach(cat => { catValues[cat.id] = { name: cat.name, color: cat.color, value: 0, weightedYield: 0, yieldWeight: 0 }; });
     this.assets.forEach(asset => {
       const p = this.prices[asset.id];
       if (!p) return;
       const priceHKD = this.toHKD(p.price, p.currency, p);
       const value = priceHKD * (asset.quantity || 0);
-      if (catValues[asset.category]) catValues[asset.category].value += value;
+      if (catValues[asset.category]) {
+        catValues[asset.category].value += value;
+        // Accumulate weighted dividend yield (weighted by asset value in HKD)
+        const y = this.dividendYields[asset.id];
+        if (y != null && y > 0) {
+          catValues[asset.category].weightedYield += y * value;
+          catValues[asset.category].yieldWeight += value;
+        }
+      }
     });
     const data = Object.values(catValues).filter(c => c.value > 0);
     if (data.length > 0) Charts.renderPie('pieChart', data);
     const legendEl = document.getElementById('categoryLegend');
     if (legendEl) {
-      legendEl.innerHTML = data.map(c => `
-        <div class="legend-item">
-          <span class="legend-dot" style="background:${c.color}; border-color:#000;"></span>
-          <span>${c.name}: ${Utils.fmtHKD(c.value)}</span>
-        </div>
-      `).join('');
+      const total = data.reduce((s, c) => s + c.value, 0);
+      legendEl.innerHTML = data.map(c => {
+        const pct = total > 0 ? ((c.value / total) * 100).toFixed(1) : '0.0';
+        // Calculate weighted average dividend yield for this category
+        let yieldStr = '';
+        if (c.yieldWeight > 0) {
+          const avgYield = c.weightedYield / c.yieldWeight;
+          yieldStr = ` <span class="legend-yield">息率 ${avgYield.toFixed(2)}%</span>`;
+        }
+        return `
+          <div class="legend-item">
+            <span class="legend-dot" style="background:${c.color}; border-color:#000;"></span>
+            <span>${c.name} <span class="legend-pct">${pct}%</span> · ${Utils.fmtHKD(c.value)}${yieldStr}</span>
+          </div>
+        `;
+      }).join('');
     }
   },
 
