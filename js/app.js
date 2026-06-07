@@ -724,4 +724,9 @@ const App = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+// Start immediately if DOM is already loaded, otherwise wait
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
+  App.init();
+}
