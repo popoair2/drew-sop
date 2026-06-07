@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Drew-Sop 資產 Dashboard</title>
+  <title>drew-sop // asset-dashboard</title>
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
@@ -12,28 +12,34 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Drew-Sop">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <!-- Fonts & CSS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<div class="terminal-frame">
+
   <!-- PULL-TO-REFRESH INDICATOR -->
   <div id="pullIndicator" class="pull-indicator">
-    <span class="pull-text">向下拉更新</span>
+    <span class="pull-text">downloading data...</span>
   </div>
+
+  <!-- BOOT SEQUENCE -->
+  <div id="bootSequence" class="boot-sequence"></div>
 
   <!-- HEADER -->
   <header class="header">
-    <div class="header-inner">
-      <h1 class="logo">DREW-SOP</h1>
-      <div class="header-right">
-        <div class="total-value-card">
-          <span class="label">總資產價值</span>
+    <div class="header-line">
+      <div class="terminal-prompt">
+        <span class="prompt-user">root</span>@<span class="prompt-host">drew-sop</span>:<span style="color:var(--text-dim)">~#</span>
+        <span style="margin-left:8px; color:var(--text-dim)">./asset-dashboard.sh</span>
+        <span class="blink" style="margin-left:4px">█</span>
+      </div>
+      <div class="header-status">
+        <div class="total-value-line">
+          <span class="label">TOTAL_ASSET_VALUE_HKD</span>
           <span class="value" id="totalValue">—</span>
         </div>
-        <button class="btn-pill" id="btnAddAsset">+ 新增資產</button>
+        <button class="btn-pill btn-primary" id="btnAddAsset">+ add_asset</button>
       </div>
     </div>
   </header>
@@ -41,41 +47,42 @@
   <!-- CHANGE BAR -->
   <section class="change-bar" id="changeBar">
     <div class="change-item">
-      <span class="change-label">日</span>
+      <span class="change-label">1D</span>
       <span class="change-value" id="changeDay">—</span>
     </div>
     <div class="change-item">
-      <span class="change-label">月</span>
+      <span class="change-label">1M</span>
       <span class="change-value" id="changeMonth">—</span>
     </div>
     <div class="change-item">
-      <span class="change-label">年</span>
+      <span class="change-label">1Y</span>
       <span class="change-value" id="changeYear">—</span>
     </div>
     <div class="last-update">
-      <span id="lastUpdate">未更新</span>
+      <span id="lastUpdate">waiting for data...</span>
     </div>
   </section>
 
   <!-- BENTO GRID -->
   <main class="bento-grid">
 
-    <!-- PIE CHART CARD -->
+    <!-- PIE CHART CARD → NOW CLI BAR CHART -->
     <div class="bento-card card-pie">
-      <h2 class="card-title">持倉分佈</h2>
-      <div class="chart-container">
-        <canvas id="pieChart"></canvas>
-      </div>
+      <div class="card-status"><span class="status-dot"></span> LIVE</div>
+      <h2 class="card-title">持倉分佈 // ALLOCATION</h2>
+      <div id="cliBarChart" class="cli-bar-chart"></div>
+      <hr class="sep">
       <div class="category-legend" id="categoryLegend"></div>
     </div>
 
     <!-- LINE CHART CARD -->
     <div class="bento-card card-line">
-      <h2 class="card-title">資產走勢</h2>
+      <div class="card-status"><span class="status-dot"></span> LIVE</div>
+      <h2 class="card-title">資產走勢 // HISTORY</h2>
       <div class="period-switcher">
-        <button class="period-btn" data-period="day" onclick="App.setPeriod('day')">日</button>
-        <button class="period-btn active" data-period="month" onclick="App.setPeriod('month')">月</button>
-        <button class="period-btn" data-period="year" onclick="App.setPeriod('year')">年</button>
+        <button class="period-btn" data-period="day" onclick="App.setPeriod('day')">1D</button>
+        <button class="period-btn active" data-period="month" onclick="App.setPeriod('month')">1M</button>
+        <button class="period-btn" data-period="year" onclick="App.setPeriod('year')">1Y</button>
       </div>
       <div class="chart-container">
         <canvas id="lineChart"></canvas>
@@ -84,16 +91,17 @@
 
     <!-- ASSET LIST BY CATEGORY -->
     <div class="bento-card card-assets" id="assetListCard">
-      <h2 class="card-title">持倉明細</h2>
+      <div class="card-status"><span class="status-dot"></span> LOADED</div>
+      <h2 class="card-title">持倉明細 // HOLDINGS</h2>
       <div id="assetList"></div>
     </div>
 
     <!-- SETTINGS CARD -->
     <div class="bento-card card-settings">
-      <h2 class="card-title">設定</h2>
+      <h2 class="card-title">系統管理 // SYSADMIN</h2>
       <div class="settings-group">
-        <button class="btn-pill" id="btnManageCategories">管理分類</button>
-        <button class="btn-pill" id="btnRefreshPrices">即時更新</button>
+        <button class="btn-pill" id="btnManageCategories">manage_categories</button>
+        <button class="btn-pill" id="btnRefreshPrices">force_refresh</button>
       </div>
     </div>
 
@@ -102,42 +110,42 @@
   <!-- MODAL: ADD/EDIT ASSET -->
   <div class="modal-overlay" id="modalAsset">
     <div class="modal">
-      <h2 class="modal-title" id="modalAssetTitle">新增資產</h2>
+      <h2 class="modal-title" id="modalAssetTitle">add_asset</h2>
       <form id="formAsset">
         <div class="form-group">
-          <label>代號 (Ticker)</label>
-          <input type="text" id="inputSymbol" placeholder="例：AAPL, 0700.HK, BTC" required>
+          <label>ticker_symbol</label>
+          <input type="text" id="inputSymbol" placeholder="e.g. AAPL, 0700.HK, BTC" required>
         </div>
         <div class="form-group form-group-search">
-          <label>顯示名稱</label>
-          <input type="text" id="inputName" placeholder="輸入名稱或代號搜尋…" required autocomplete="off">
+          <label>display_name</label>
+          <input type="text" id="inputName" placeholder="search or enter name…" required autocomplete="off">
           <div class="search-dropdown" id="searchDropdown"></div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>類型</label>
+            <label>asset_type</label>
             <select id="inputType">
-              <option value="us_stock">美股</option>
-              <option value="hk_stock">港股</option>
-              <option value="etf">美股 ETF</option>
-              <option value="hk_etf">港股 ETF</option>
-              <option value="crypto">加密貨幣</option>
-              <option value="forex">外匯</option>
-              <option value="cash">現金</option>
+              <option value="us_stock">US_STOCK</option>
+              <option value="hk_stock">HK_STOCK</option>
+              <option value="etf">US_ETF</option>
+              <option value="hk_etf">HK_ETF</option>
+              <option value="crypto">CRYPTO</option>
+              <option value="forex">FOREX</option>
+              <option value="cash">CASH</option>
             </select>
           </div>
           <div class="form-group">
-            <label>分類</label>
+            <label>category_id</label>
             <select id="inputCategory"></select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>持倉數量</label>
+            <label>quantity</label>
             <input type="number" id="inputQuantity" step="any" placeholder="0" required>
           </div>
           <div class="form-group">
-            <label>貨幣</label>
+            <label>currency</label>
             <select id="inputCurrency">
               <option value="USD">USD</option>
               <option value="HKD">HKD</option>
@@ -150,14 +158,14 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>派息率 (%)</label>
-            <input type="number" id="inputDividendYield" step="0.01" min="0" max="100" placeholder="例如 2.5">
+            <label>dividend_yield_pct</label>
+            <input type="number" id="inputDividendYield" step="0.01" min="0" max="100" placeholder="e.g. 2.50">
           </div>
           <div class="form-group"></div>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-pill" id="btnCancelAsset">取消</button>
-          <button type="submit" class="btn-pill btn-primary">儲存</button>
+          <button type="button" class="btn-pill" id="btnCancelAsset">cancel</button>
+          <button type="submit" class="btn-pill btn-primary">save</button>
         </div>
       </form>
     </div>
@@ -166,45 +174,29 @@
   <!-- MODAL: MANAGE CATEGORIES -->
   <div class="modal-overlay" id="modalCategories">
     <div class="modal">
-      <h2 class="modal-title">管理分類</h2>
+      <h2 class="modal-title">manage_categories</h2>
       <div id="categoryList"></div>
+      <hr class="sep">
       <form id="formAddCategory" class="form-inline">
-        <input type="text" id="inputCategoryName" placeholder="新分類名稱" required>
-        <input type="color" id="inputCategoryColor" value="#B8E986">
-        <button type="submit" class="btn-pill btn-primary">加入</button>
+        <input type="text" id="inputCategoryName" placeholder="new category name" required>
+        <input type="color" id="inputCategoryColor" value="#00FF41">
+        <button type="submit" class="btn-pill btn_primary">add</button>
       </form>
       <div class="form-actions">
-        <button class="btn-pill" id="btnCloseCategories">關閉</button>
+        <button class="btn-pill" id="btnCloseCategories">close</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: API KEY (hidden — key is embedded) -->
-  <div class="modal-overlay" id="modalApiKey" style="display:none;">
-    <div class="modal">
-      <h2 class="modal-title">設定 API Key</h2>
-      <p class="modal-desc">請輸入你嘅 Finnhub API Key（免費註冊：finnhub.io）</p>
-      <form id="formApiKey">
-        <div class="form-group">
-          <input type="text" id="inputApiKey" placeholder="Finnhub API Key" required>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn-pill btn-primary">儲存</button>
-        </div>
-      </form>
-    </div>
-  </div>
+</div><!-- /terminal-frame -->
 
-  <!-- Version: 7 — cache buster -->
+  <!-- Version: 15 — terminal UI -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=14').then(reg => {
-        // Force update on every load
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=15').then(reg => {
         reg.update();
       }).catch(() => {});
-      // If there's a waiting SW, reload once
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // New SW took over — reload once
         if (!sessionStorage.getItem('swReloaded')) {
           sessionStorage.setItem('swReloaded', '1');
           location.reload();
@@ -214,10 +206,10 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=14"></script>
-  <script src="js/storage.js?v=14"></script>
-  <script src="js/api.js?v=14"></script>
-  <script src="js/charts.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/utils.js?v=15"></script>
+  <script src="js/storage.js?v=15"></script>
+  <script src="js/api.js?v=15"></script>
+  <script src="js/charts.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>

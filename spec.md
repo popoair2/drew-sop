@@ -41,32 +41,48 @@
 - Web app / HTML（純靜態）
 - 唔需要計回報率（因為未必有成本數據）
 
-## UI/UX 規格 — Neo-Brutalist Bento
+## UI/UX 規格 — Terminal / Hacker Dashboard
 
 ### 整體視覺
-- 高對比度深色模式 + 模組化 Bento Box 佈局
-- **絕對扁平化** — 無陰影、無漸變、無 3D 效果
+- **純黑背景** (#000000) + **Matrix 綠字** (#00FF41)
+- **等寬字體** (Courier New / Consolas / Monaco) — 所有文字包括數據
+- **終端機美學** — 命令提示符 `root@drew-sop:~#`、`>` 前綴、閃爍游標
+- **ASCII 風格邊框** — 綠色線條分隔，無圓角
+- **極簡 CRT 掃描線效果** (subtle scanline overlay)
+- 啟動時顯示 **boot sequence 動畫** (類似系統啟動 log)
 
 ### 配色
 | 用途 | 顏色 |
 |------|------|
 | 全局背景 | 純黑 #000000 |
-| 全局文字 | 純白 #FFFFFF 或淺灰 |
-| 卡片底色 | 大膽實色塊（淺灰綠、芥末黃、灰紫色、亮橘紅等） |
-| 卡片內文字 | 純黑 #000000 |
+| 全局文字 | Matrix 綠 #00FF41 |
+| 暗綠 (次要文字) | #008F11 |
+| 超暗綠 (邊框/分隔) | #003B00 |
+| 亮綠 (強調數據) | #39FF14 |
+| 警告 | 琥珀 #FFB000 |
+| 錯誤 | 紅 #FF3333 |
+| 股息率 | 青 #00FFFF |
+| 卡片底色 | 近黑 #0A0A0A |
+| 輸入框底色 | #0D0D0D |
 
 ### 字體
-- 現代無襯線字體（Inter / Space Grotesk / Helvetica Neue）
-- 核心數據極大且顯眼
-- 分類標籤全大寫 ALL CAPS
+- **主要**: Courier New / Consolas / Monaco (monospace)
+- **核心數據**: 大號 + 粗體 + 綠色發光 (text-shadow)
+- **標籤**: 全大寫 ALL CAPS + 字間距
 
 ### 組件
-- 卡片：誇張大圓角（border-radius: 24px）
-- 按鈕/標籤：膠囊形狀（Pill-shape）+ 1-2px 實線邊框
-- 圖表極度簡化：
-  - 進度條 = 純黑實心粗線
-  - 柱狀圖 = 密集黑色幼直線（Barcode 效果）
-  - 資產列表 = 純文字對齊，去背
+- **卡片**: 綠色細邊框 + 黑色底色，無圓角
+- **進度條**: CLI 風格水平長條 (替代 pie chart)
+- **資產列表**: 純文字對齊，terminal 風格表格
+- **按鈕**: 綠色邊框 + 黑色底，hover 時發光
+- **狀態指示**: 閃爍綠燈 (blinking status dot)
+- **游標**: 閃爍方塊 (blinking block cursor)
+- **空狀態**: `[ NO DATA ]` 終端提示風格
+- **錯誤條**: 紅色邊框 + 錯誤碼風格訊息
+
+### 佈局
+- Bento Grid 以 1px 綠色分隔線取代 gap
+- 響應式設計保留 (mobile: 單欄)
 
 ## 技術方案
 - **API**: Finnhub (free tier, 60 calls/min) — 股票/ETF/外匯
@@ -128,3 +144,4 @@
 |------|--------|
 | 2026-06-03 | 初版 |
 | 2026-06-03 | 加入 Neo-Brutalist Bento UI 規格、自定義分類、HKD 基準、日/月/年變化 |
+| 2026-06-07 | UI overhaul: Terminal/Hacker style — black bg, green monospace, CLI bar charts, boot sequence, scanline CRT effect |

@@ -1,23 +1,21 @@
 /**
- * charts.js — Chart.js wrappers for pie + line charts
+ * charts.js — Chart.js wrappers for line chart + CLI bar chart for allocation
  */
 
 const Charts = {
   pieChart: null,
   lineChart: null,
 
-  /** Color palette for categories (Retro-Futuristic) */
+  /** Green palette for categories (terminal style) */
   categoryColors: [
-    '#E8735A', // coral
-    '#D4A843', // mustard
-    '#E07A3A', // orange
-    '#C084FC', // purple (muted)
-    '#60A5FA', // blue (muted)
-    '#F472B6', // pink (muted)
-    '#2DD4BF', // teal
-    '#F08C72', // salmon
-    '#A8E063', // green (muted)
-    '#FFD93D', // yellow (muted)
+    '#00FF41', // bright green
+    '#00D936', // green
+    '#00B32D', // medium green
+    '#008F11', // dim green
+    '#39FF14', // neon green
+    '#00FF80', // green-cyan
+    '#4AFF9E', // light green
+    '#00CC33', // dark green
   ],
 
   /** Get color by index */
@@ -25,114 +23,54 @@ const Charts = {
     return this.categoryColors[i % this.categoryColors.length];
   },
 
-  /** Render/update pie chart with inline percentage labels + dividend yield in legend */
-  renderPie(canvasId, categoryData, dividendYields) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+  /**
+   * Render CLI-style horizontal bar chart (replaces pie chart)
+   * categoryData: [{ name, color, value, weightedYield, yieldWeight }]
+   */
+  renderCliBar(canvasId, categoryData) {
+    const container = document.getElementById(canvasId);
+    if (!container) return;
 
     const total = categoryData.reduce((sum, c) => sum + c.value, 0);
 
-    // Build labels with percentage
-    const labels = categoryData.map(c => {
-      const pct = total > 0 ? ((c.value / total) * 100).toFixed(1) : '0.0';
-      return `${c.name} ${pct}%`;
-    });
-    const data = categoryData.map(c => c.value);
-    const colors = categoryData.map((c, i) => c.color || this.color(i));
-
-    if (this.pieChart) {
-      this.pieChart.destroy();
+    if (total === 0 || categoryData.length === 0) {
+      container.innerHTML = '<div class="empty-state">no allocation data</div>';
+      return;
     }
 
-    // Custom plugin: draw percentage labels on each slice
-    const sliceLabelPlugin = {
-      id: 'sliceLabels',
-      afterDraw(chart) {
-        const { ctx, data } = chart;
-        const dataset = data.datasets[0];
-        const meta = chart.getDatasetMeta(0);
-        const total = dataset.data.reduce((a, b) => a + b, 0);
-        if (total === 0) return;
+    // Sort by value descending
+    const sorted = [...categoryData].sort((a, b) => b.value - a.value);
 
-        ctx.save();
-        for (let i = 0; i < meta.data.length; i++) {
-          const slice = meta.data[i];
-          const value = dataset.data[i];
-          if (value === 0) continue;
-          const pct = ((value / total) * 100).toFixed(1);
+    let html = '';
+    for (const cat of sorted) {
+      const pct = total > 0 ? ((cat.value / total) * 100) : 0;
+      const barWidth = Math.max(pct, 1);
+      const fillClass = pct > 30 ? 'high' : (pct > 10 ? 'mid' : '');
+      const barColor = cat.color || '#00FF41';
 
-          // Calculate label position: midpoint of each arc
-          const startAngle = slice.startAngle;
-          const endAngle = slice.endAngle;
-          const midAngle = (startAngle + endAngle) / 2;
-          const r = slice.innerRadius + (slice.outerRadius - slice.innerRadius) * 0.55;
-          const x = slice.x + Math.cos(midAngle) * r;
-          const y = slice.y + Math.sin(midAngle) * r;
-
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = "700 14px 'Space Grotesk', 'Helvetica Neue', sans-serif";
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-
-          // Draw text shadow for readability
-          ctx.shadowColor = 'rgba(26, 20, 16, 0.6)';
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetX = 1;
-          ctx.shadowOffsetY = 1;
-
-          ctx.fillText(pct + '%', x, y);
-
-          ctx.shadowColor = 'transparent';
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-        }
-        ctx.restore();
+      // Weighted avg dividend yield
+      let yieldStr = '';
+      if (cat.yieldWeight > 0) {
+        const avgYield = cat.weightedYield / cat.yieldWeight;
+        yieldStr = ` <span class="legend-yield">DY:${avgYield.toFixed(2)}%</span>`;
       }
-    };
 
-    this.pieChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors,
-          borderColor: '#1A1410',
-          borderWidth: 2.5,
-          hoverOffset: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '40%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#1A1410',
-            titleColor: '#F5F0E8',
-            bodyColor: '#F5F0E8',
-            borderColor: '#F5F0E8',
-            borderWidth: 2,
-            cornerRadius: 14,
-            padding: 14,
-            callbacks: {
-              label: (ctx) => {
-                const val = ctx.parsed;
-                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
-                return ` HK$${Utils.fmt(val)} (${pct}%)`;
-              }
-            }
-          }
-        }
-      },
-      plugins: [sliceLabelPlugin]
-    });
+      html += `
+        <div class="cli-bar-row">
+          <span class="cli-bar-label" title="${cat.name}">${cat.name}</span>
+          <div class="cli-bar-track">
+            <div class="cli-bar-fill ${fillClass}" style="width:${barWidth}%; background:${barColor}; ${pct > 30 ? 'box-shadow:0 0 8px rgba(0,255,65,0.3)' : ''}"></div>
+          </div>
+          <span class="cli-bar-pct">${pct.toFixed(1)}%</span>
+          <span class="cli-bar-value">${Utils.fmtHKD(cat.value)}${yieldStr}</span>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
   },
 
-  /** Render/update line chart */
+  /** Render/update line chart — terminal green on black */
   renderLine(canvasId, snapshots, period) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -140,23 +78,21 @@ const Charts = {
 
     // Handle empty snapshots
     if (!snapshots || snapshots.length === 0) {
-      // Draw empty state
       if (this.lineChart) {
         this.lineChart.destroy();
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#1A1410';
-      ctx.font = "600 13px 'Space Grotesk', sans-serif";
+      ctx.fillStyle = '#008F11';
+      ctx.font = "700 12px 'Courier New', monospace";
       ctx.textAlign = 'center';
-      ctx.globalAlpha = 0.4;
-      ctx.fillText('暫無歷史數據', canvas.width / 2, canvas.height / 2);
+      ctx.globalAlpha = 0.5;
+      ctx.fillText('[ NO HISTORICAL DATA ]', canvas.width / 2, canvas.height / 2);
       ctx.restore();
       return;
     }
 
     // Filter snapshots based on period
-    // Supabase returns: { created_at: "2026-06-04T...", total_value_hkd: 123456, values: {...} }
     const now = new Date();
     let cutoff = new Date();
     if (period === 'day') {
@@ -178,11 +114,11 @@ const Charts = {
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#1A1410';
-      ctx.font = "600 13px 'Space Grotesk', sans-serif";
+      ctx.fillStyle = '#008F11';
+      ctx.font = "700 12px 'Courier New', monospace";
       ctx.textAlign = 'center';
-      ctx.globalAlpha = 0.4;
-      ctx.fillText('暫無歷史數據', canvas.width / 2, canvas.height / 2);
+      ctx.globalAlpha = 0.5;
+      ctx.fillText('[ NO HISTORICAL DATA ]', canvas.width / 2, canvas.height / 2);
       ctx.restore();
       return;
     }
@@ -202,19 +138,21 @@ const Charts = {
       data: {
         labels,
         datasets: [{
-          label: '總資產 (HKD)',
+          label: 'TOTAL (HKD)',
           data,
-          borderColor: '#1A1410',
-          backgroundColor: 'rgba(232, 115, 90, 0.15)',
-          borderWidth: 3,
+          borderColor: '#00FF41',
+          backgroundColor: 'rgba(0, 255, 65, 0.08)',
+          borderWidth: 2,
           fill: true,
-          tension: 0.3,
-          pointRadius: 4,
+          tension: 0.1,
+          pointRadius: 3,
           pointHitRadius: 12,
-          pointHoverRadius: 7,
-          pointHoverBackgroundColor: '#1A1410',
-          pointHoverBorderColor: '#F5F0E8',
-          pointHoverBorderWidth: 2.5
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#00FF41',
+          pointHoverBorderColor: '#000000',
+          pointHoverBorderWidth: 2,
+          pointBackgroundColor: '#00FF41',
+          pointBorderColor: '#000000'
         }]
       },
       options: {
@@ -227,32 +165,44 @@ const Charts = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1A1410',
-            titleColor: '#F5F0E8',
-            bodyColor: '#F5F0E8',
-            borderColor: '#F5F0E8',
-            borderWidth: 2,
-            cornerRadius: 14,
-            padding: 14,
+            backgroundColor: '#0A0A0A',
+            titleColor: '#00FF41',
+            bodyColor: '#00FF41',
+            borderColor: '#00FF41',
+            borderWidth: 1,
+            cornerRadius: 0,
+            padding: 10,
+            titleFont: { family: "'Courier New', monospace", size: 11 },
+            bodyFont: { family: "'Courier New', monospace", size: 12 },
+            displayColors: false,
             callbacks: {
+              title: (items) => `[ ${items[0].label} ]`,
               label: (ctx) => ` HK$${Utils.fmt(ctx.parsed.y)}`
             }
           }
         },
         scales: {
           x: {
-            grid: { display: false },
+            grid: {
+              color: 'rgba(0, 59, 0, 0.3)',
+              drawBorder: true,
+              borderColor: '#003B00'
+            },
             ticks: {
-              color: '#1A1410',
-              font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
+              color: '#008F11',
+              font: { family: "'Courier New', monospace", size: 10 },
               maxTicksLimit: 8
             }
           },
           y: {
-            grid: { color: 'rgba(26,20,16,0.08)' },
+            grid: {
+              color: 'rgba(0, 59, 0, 0.2)',
+              drawBorder: true,
+              borderColor: '#003B00'
+            },
             ticks: {
-              color: '#1A1410',
-              font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
+              color: '#008F11',
+              font: { family: "'Courier New', monospace", size: 10 },
               callback: (v) => '$' + Utils.fmt(v)
             }
           }

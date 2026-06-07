@@ -13,9 +13,35 @@ const App = {
   isLoading: false,
   fetchErrors: [],
 
+  /** Boot sequence animation */
+  async _bootSequence() {
+    const el = document.getElementById('bootSequence');
+    if (!el) return;
+    const lines = [
+      { text: 'DREW-SOP ASSET TERMINAL v2.0', cls: 'cmd' },
+      { text: 'Initializing system...', cls: 'info' },
+      { text: '[OK] Loading kernel modules', cls: 'ok', delay: 200 },
+      { text: '[OK] Connecting to Supabase backend', cls: 'ok', delay: 400 },
+      { text: '[OK] Price feeds online (Yahoo + CoinGecko)', cls: 'ok', delay: 300 },
+      { text: '[OK] Dashboard ready.', cls: 'ok', delay: 200 },
+    ];
+    for (const line of lines) {
+      const div = document.createElement('div');
+      div.className = `boot-line ${line.cls}`;
+      div.textContent = line.text;
+      el.appendChild(div);
+      if (line.delay) await new Promise(r => setTimeout(r, line.delay));
+    }
+    await new Promise(r => setTimeout(r, 300));
+    el.style.display = 'none';
+  }
+
   /** Initialize app */
   async init() {
     // No API key needed — using Yahoo Finance (free, all markets) + CoinGecko (crypto)
+
+    // Boot animation
+    await this._bootSequence();
 
     // Load from Supabase (with localStorage fallback)
     this.assets = await Storage.getAssets();
@@ -286,7 +312,9 @@ const App = {
   renderTotalValue() {
     const total = this.calcTotalValue();
     const el = document.getElementById('totalValue');
-    el.textContent = this.assets.length > 0 ? Utils.fmtHKD(total) : '—';
+    el.textContent = this.assets.length > 0
+      ? '$' + Utils.fmt(total)
+      : '—';
   },
 
   renderChangeBar() {
@@ -311,7 +339,7 @@ const App = {
     }
     const now = new Date();
     document.getElementById('lastUpdate').textContent =
-      `更新: ${now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })}`;
+      `updated: ${now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })} UTC+8`;
   },
 
   renderAssetList() {
@@ -338,24 +366,17 @@ const App = {
         const p = this.prices[a.id];
         if (p) groupTotal += this.toHKD(p.price, p.currency, p) * (a.quantity || 0);
       });
-      // Determine text color based on background brightness
-      const hex = group.color.replace('#', '');
-      const r = parseInt(hex.substr(0, 2), 16);
-      const g = parseInt(hex.substr(2, 2), 16);
-      const b = parseInt(hex.substr(4, 2), 16);
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      const textColor = brightness > 128 ? '#1A1410' : '#FFFFFF';
 
       html += `
         <div class="category-section">
-          <div class="category-header" style="background:${group.color}; border-bottom-color:${group.color};">
-            <h3 style="color:${textColor};">${group.name}</h3>
-            <span class="cat-total" style="color:${textColor};">${Utils.fmtHKD(groupTotal)}</span>
+          <div class="category-header">
+            <h3>${group.name}</h3>
+            <span class="cat-total">${Utils.fmtHKD(groupTotal)}</span>
           </div>
           <table class="asset-table">
             <thead>
               <tr>
-                <th>代號</th><th>名稱</th><th>數量</th><th>價格</th><th>息率</th><th>價值 (HKD)</th><th></th>
+                <th>TICKER</th><th>NAME</th><th>QTY</th><th>PRICE</th><th>YIELD</th><th>VALUE_HKD</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -400,8 +421,9 @@ const App = {
   },
 
   renderPieChart() {
+    const container = document.getElementById('cliBarChart');
     if (this.assets.length === 0) {
-      if (Charts.pieChart) { Charts.pieChart.destroy(); Charts.pieChart = null; }
+      if (container) container.innerHTML = '<div class="empty-state">no assets loaded<br>run: ./add_asset.sh</div>';
       const legendEl = document.getElementById('categoryLegend');
       if (legendEl) legendEl.innerHTML = '';
       return;
@@ -415,7 +437,6 @@ const App = {
       const value = priceHKD * (asset.quantity || 0);
       if (catValues[asset.category]) {
         catValues[asset.category].value += value;
-        // Accumulate weighted dividend yield (weighted by asset value in HKD)
         const y = this.dividendYields[asset.id];
         if (y != null && y > 0) {
           catValues[asset.category].weightedYield += y * value;
@@ -424,21 +445,23 @@ const App = {
       }
     });
     const data = Object.values(catValues).filter(c => c.value > 0);
-    if (data.length > 0) Charts.renderPie('pieChart', data);
+    if (data.length > 0 && container) {
+      Charts.renderCliBar('cliBarChart', data);
+    }
+    // Legend
     const legendEl = document.getElementById('categoryLegend');
     if (legendEl) {
       const total = data.reduce((s, c) => s + c.value, 0);
       legendEl.innerHTML = data.map(c => {
         const pct = total > 0 ? ((c.value / total) * 100).toFixed(1) : '0.0';
-        // Calculate weighted average dividend yield for this category
         let yieldStr = '';
         if (c.yieldWeight > 0) {
           const avgYield = c.weightedYield / c.yieldWeight;
-          yieldStr = ` <span class="legend-yield">息率 ${avgYield.toFixed(2)}%</span>`;
+          yieldStr = ` <span class="legend-yield">DY:${avgYield.toFixed(2)}%</span>`;
         }
         return `
           <div class="legend-item">
-            <span class="legend-dot" style="background:${c.color}; border-color:#000;"></span>
+            <span class="legend-dot filled" style="background:${c.color}; border-color:${c.color};"></span>
             <span>${c.name} <span class="legend-pct">${pct}%</span> · ${Utils.fmtHKD(c.value)}${yieldStr}</span>
           </div>
         `;
@@ -472,15 +495,15 @@ const App = {
       errorBar.style.display = 'none';
       return;
     }
-    errorBar.style.display = 'block';
+    errorBar.style.display = 'flex';
     if (this.isLoading) {
-      errorBar.innerHTML = `<span class="loading-dots"><span></span><span></span><span></span></span><span class="error-text">更新緊價格...</span>`;
+      errorBar.innerHTML = `<span class="loading-dots"><span></span><span></span><span></span></span><span class="error-text">downloading market data...</span>`;
       return;
     }
     if (this.fetchErrors.length > 0) {
-      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">部分資產更新失敗: ${this.fetchErrors.map(e => e.symbol + ' (' + e.error + ')').join(', ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">✕</button>`;
+      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">ERR: ${this.fetchErrors.map(e => e.symbol + ' [' + e.error +]').join(' | ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">[×]</button>`;
     }
-  },
+  }
 
   dismissErrors() {
     this.fetchErrors = [];
