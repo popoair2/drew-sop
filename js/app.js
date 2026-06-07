@@ -34,7 +34,7 @@ const App = {
     }
     await new Promise(r => setTimeout(r, 300));
     el.style.display = 'none';
-  }
+  },
 
   /** Initialize app */
   async init() {
@@ -501,9 +501,10 @@ const App = {
       return;
     }
     if (this.fetchErrors.length > 0) {
-      errorBar.innerHTML = `<span class="error-icon">⚠</span><span class="error-text">ERR: ${this.fetchErrors.map(e => e.symbol + ' [' + e.error +]').join(' | ')}</span><button class="btn-dismiss" onclick="App.dismissErrors()">[×]</button>`;
+      const errText = this.fetchErrors.map(e => e.symbol + ' [' + e.error + ']').join(' | ');
+      errorBar.innerHTML = '<span class="error-icon">⚠</span><span class="error-text">ERR: ' + errText + '</span><button class="btn-dismiss" onclick="App.dismissErrors()">[×]</button>';
     }
-  }
+  },
 
   dismissErrors() {
     this.fetchErrors = [];
