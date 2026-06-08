@@ -223,14 +223,21 @@ const Storage = {
     }
   },
 
-  /** Get cached prices (from Supabase ds_snapshots) */
+  /** Get cached prices from localStorage */
   getPrices() {
-    return {};
+    try {
+      const raw = localStorage.getItem('drew_sop_prices');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
   },
 
-  /** Save prices cache (no-op for Supabase-only mode — prices are live) */
+  /** Save prices cache to localStorage */
   savePrices(prices) {
-    // Prices are always fetched live; no caching needed
+    try {
+      localStorage.setItem('drew_sop_prices', JSON.stringify(prices));
+    } catch (e) { /* ignore */ }
   },
 
   /** Save a daily snapshot of total portfolio value to Supabase */
@@ -243,7 +250,7 @@ const Storage = {
       total_value_hkd: totalHKD,
       asset_values: assetValues
     };
-    const { error } = await sb.from('ds_snapshots').insert(snapshot);
+    const { error } = await sb.from('ds_snapshots').upsert(snapshot, { onConflict: 'date' });
     if (error) console.error('Supabase saveDailySnapshot error:', error);
   },
 
