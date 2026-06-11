@@ -1,6 +1,7 @@
 /* ============================================================
-   Drew-Sop — Terminal / Hacker Dashboard Style
-   Black background, green monospace, CRT aesthetic
+   Drew-Sop — Theme-Aware Stylesheet
+   All colours/fonts/spacing use CSS custom properties.
+   Themes override these via [data-theme="xxx"] on <html>.
    ============================================================ */
 
 /* --- RESET & BASE --- */
@@ -11,7 +12,10 @@
 }
 
 :root {
-  /* Terminal green palette */
+  /* ── Default theme (hacker-terminal) ── */
+  /* These values are overridden by ThemeEngine.apply() at runtime,
+     but serve as fallback before JS loads. */
+
   --green-bright: #00FF41;
   --green: #00D936;
   --green-dim: #008F11;
@@ -19,30 +23,36 @@
   --green-glow: rgba(0, 255, 65, 0.15);
   --green-glow-strong: rgba(0, 255, 65, 0.3);
 
-  /* Backgrounds */
   --bg: #000000;
   --bg-card: #0A0A0A;
   --bg-input: #0D0D0D;
 
-  /* Text */
   --text: #00FF41;
   --text-dim: #008F11;
   --text-bright: #39FF14;
   --text-muted: #005F0A;
 
-  /* Accent (for errors/warnings) -- amber/amber-green */
   --warn: #FFB000;
   --err: #FF3333;
   --cyan: #00FFFF;
 
-  /* Borders */
   --border: #00FF41;
   --border-dim: #003B00;
   --border-glow: rgba(0, 255, 65, 0.4);
 
-  /* Minimal radius — terminal style */
   --radius: 0px;
   --font: 'Courier New', 'Consolas', 'Monaco', 'Lucida Console', monospace;
+
+  --cat-1: #00FF41;
+  --cat-2: #00D936;
+  --cat-3: #00B32D;
+  --cat-4: #008F11;
+  --cat-5: #39FF14;
+  --cat-6: #00FF80;
+  --cat-7: #4AFF9E;
+  --cat-8: #00CC33;
+
+  --scanline-opacity: 0.08;
 }
 
 html {
@@ -68,8 +78,8 @@ body::after {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.08) 2px,
-    rgba(0, 0, 0, 0.08) 4px
+    rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 4px
   );
   pointer-events: none;
   z-index: 9999;
@@ -438,18 +448,6 @@ body::after {
   font-weight: 700;
 }
 
-/* --- LEGEND COLOR SWATCHES (green variants) --- */
-:root {
-  --cat-1: #00FF41;
-  --cat-2: #00D936;
-  --cat-3: #00B32D;
-  --cat-4: #008F11;
-  --cat-5: #39FF14;
-  --cat-6: #00FF80;
-  --cat-7: #4AFF9E;
-  --cat-8: #00CC33;
-}
-
 /* --- ASSET TABLE --- */
 .category-section {
   margin-bottom: 20px;
@@ -557,7 +555,7 @@ body::after {
   font-size: 0.65rem;
   font-weight: 700;
   padding: 6px 16px;
-  border-radius: 0;
+  border-radius: var(--radius);
   border: 1px solid var(--green-dim);
   background: transparent;
   color: var(--text);
@@ -598,7 +596,7 @@ body::after {
   font-size: 0.55rem;
   font-weight: 700;
   padding: 3px 10px;
-  border-radius: 0;
+  border-radius: var(--radius);
   border: 1px solid var(--green-dark);
   background: transparent;
   color: var(--text-dim);
@@ -614,11 +612,66 @@ body::after {
   background: var(--green-dark);
 }
 
+/* --- THEME SWITCHER --- */
+.theme-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.theme-switcher-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.theme-switcher-label::before {
+  content: '$ ';
+  color: var(--green-bright);
+}
+
+.theme-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.theme-btn {
+  font-family: var(--font);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-dim);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.15s ease;
+}
+
+.theme-btn:hover {
+  border-color: var(--green-bright);
+  color: var(--text);
+}
+
+.theme-btn.active {
+  background: var(--green-dark);
+  border-color: var(--green-bright);
+  color: var(--green-bright);
+  box-shadow: 0 0 8px var(--green-glow);
+}
+
 /* --- SETTINGS --- */
 .settings-group {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: flex-start;
 }
 
 /* --- MODALS --- */
@@ -640,7 +693,7 @@ body::after {
 .modal {
   background: var(--bg);
   color: var(--text);
-  border-radius: 0;
+  border-radius: var(--radius);
   padding: 24px;
   width: 100%;
   max-width: 520px;
@@ -708,7 +761,7 @@ body::after {
   font-size: 0.85rem;
   padding: 8px 12px;
   border: 1px solid var(--green-dark);
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--bg-input);
   color: var(--text);
   outline: none;
@@ -753,7 +806,7 @@ body::after {
   font-size: 0.8rem;
   padding: 8px 12px;
   border: 1px solid var(--green-dark);
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--bg-input);
   color: var(--text);
   outline: none;
@@ -768,7 +821,7 @@ body::after {
   width: 36px;
   height: 36px;
   border: 1px solid var(--green-dark);
-  border-radius: 0;
+  border-radius: var(--radius);
   cursor: pointer;
   padding: 2px;
   background: var(--bg-input);
@@ -803,7 +856,7 @@ body::after {
   font-size: 0.55rem;
   font-weight: 700;
   padding: 3px 10px;
-  border-radius: 0;
+  border-radius: var(--radius);
   border: 1px solid var(--err);
   background: transparent;
   color: var(--err);
@@ -821,7 +874,7 @@ body::after {
   font-size: 0.55rem;
   font-weight: 700;
   padding: 3px 10px;
-  border-radius: 0;
+  border-radius: var(--radius);
   border: 1px solid var(--green-dark);
   background: transparent;
   color: var(--text-dim);
@@ -888,7 +941,7 @@ body::after {
   font-size: 0.6rem;
   font-weight: 700;
   padding: 6px 14px;
-  border-radius: 0;
+  border-radius: var(--radius);
   border: 1px solid var(--green-dark);
   background: transparent;
   color: var(--text-dim);
@@ -1041,7 +1094,7 @@ body::after {
   color: var(--err);
   cursor: pointer;
   padding: 2px 8px;
-  border-radius: 0;
+  border-radius: var(--radius);
 }
 
 .error-bar .btn-dismiss:hover {

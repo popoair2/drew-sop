@@ -99,6 +99,15 @@
     <!-- SETTINGS CARD -->
     <div class="bento-card card-settings">
       <h2 class="card-title">系統管理 // SYSADMIN</h2>
+
+      <!-- THEME SWITCHER -->
+      <div class="theme-switcher">
+        <div class="theme-switcher-label">ui_theme</div>
+        <div class="theme-options" id="themeOptions"></div>
+      </div>
+
+      <hr class="sep">
+
       <div class="settings-group">
         <button class="btn-pill" id="btnManageCategories">manage_categories</button>
         <button class="btn-pill" id="btnRefreshPrices">force_refresh</button>
@@ -190,10 +199,10 @@
 
 </div><!-- /terminal-frame -->
 
-  <!-- Version: 15 — terminal UI -->
+  <!-- Version: 16 — theme system -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=15').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=16').then(reg => {
         reg.update();
       }).catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -206,10 +215,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=15"></script>
-  <script src="js/storage.js?v=15"></script>
-  <script src="js/api.js?v=15"></script>
-  <script src="js/charts.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
+  <script src="js/utils.js?v=16"></script>
+  <script src="js/themes.js?v=16"></script>
+  <script src="js/storage.js?v=16"></script>
+  <script src="js/api.js?v=16"></script>
+  <script src="js/charts.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
 </body>
 </html>

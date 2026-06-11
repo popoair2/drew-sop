@@ -24,6 +24,13 @@ const Charts = {
   },
 
   /**
+   * Read a CSS custom property value from :root
+   */
+  _css(prop) {
+    return getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+  },
+
+  /**
    * Render CLI-style horizontal bar chart (replaces pie chart)
    * categoryData: [{ name, color, value, weightedYield, yieldWeight }]
    */
@@ -70,11 +77,19 @@ const Charts = {
     container.innerHTML = html;
   },
 
-  /** Render/update line chart — terminal green on black */
+  /** Render/update line chart — reads colours from CSS variables for theme support */
   renderLine(canvasId, snapshots, period) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
+    // Read theme-aware colours from CSS
+    const greenBright = this._css('--green-bright') || '#00FF41';
+    const greenDim    = this._css('--green-dim')    || '#008F11';
+    const greenDark   = this._css('--green-dark')   || '#003B00';
+    const bgCard      = this._css('--bg-card')      || '#0A0A0A';
+    const fontFamily  = this._css('--font')         || "'Courier New', monospace";
+    const radius      = parseInt(this._css('--radius')) || 0;
 
     // Handle empty snapshots
     if (!snapshots || snapshots.length === 0) {
@@ -83,8 +98,8 @@ const Charts = {
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#008F11';
-      ctx.font = "700 12px 'Courier New', monospace";
+      ctx.fillStyle = greenDim;
+      ctx.font = "700 12px " + fontFamily;
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.5;
       ctx.fillText('[ NO HISTORICAL DATA ]', canvas.width / 2, canvas.height / 2);
@@ -114,8 +129,8 @@ const Charts = {
         this.lineChart = null;
       }
       ctx.save();
-      ctx.fillStyle = '#008F11';
-      ctx.font = "700 12px 'Courier New', monospace";
+      ctx.fillStyle = greenDim;
+      ctx.font = "700 12px " + fontFamily;
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.5;
       ctx.fillText('[ NO HISTORICAL DATA ]', canvas.width / 2, canvas.height / 2);
@@ -140,7 +155,7 @@ const Charts = {
         datasets: [{
           label: 'TOTAL (HKD)',
           data,
-          borderColor: '#00FF41',
+          borderColor: greenBright,
           backgroundColor: 'rgba(0, 255, 65, 0.08)',
           borderWidth: 2,
           fill: true,
@@ -148,10 +163,10 @@ const Charts = {
           pointRadius: 3,
           pointHitRadius: 12,
           pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#00FF41',
+          pointHoverBackgroundColor: greenBright,
           pointHoverBorderColor: '#000000',
           pointHoverBorderWidth: 2,
-          pointBackgroundColor: '#00FF41',
+          pointBackgroundColor: greenBright,
           pointBorderColor: '#000000'
         }]
       },
@@ -165,15 +180,15 @@ const Charts = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#0A0A0A',
-            titleColor: '#00FF41',
-            bodyColor: '#00FF41',
-            borderColor: '#00FF41',
+            backgroundColor: bgCard,
+            titleColor: greenBright,
+            bodyColor: greenBright,
+            borderColor: greenBright,
             borderWidth: 1,
-            cornerRadius: 0,
+            cornerRadius: radius,
             padding: 10,
-            titleFont: { family: "'Courier New', monospace", size: 11 },
-            bodyFont: { family: "'Courier New', monospace", size: 12 },
+            titleFont: { family: fontFamily, size: 11 },
+            bodyFont: { family: fontFamily, size: 12 },
             displayColors: false,
             callbacks: {
               title: (items) => `[ ${items[0].label} ]`,
@@ -186,11 +201,11 @@ const Charts = {
             grid: {
               color: 'rgba(0, 59, 0, 0.3)',
               drawBorder: true,
-              borderColor: '#003B00'
+              borderColor: greenDark
             },
             ticks: {
-              color: '#008F11',
-              font: { family: "'Courier New', monospace", size: 10 },
+              color: greenDim,
+              font: { family: fontFamily, size: 10 },
               maxTicksLimit: 8
             }
           },
@@ -198,11 +213,11 @@ const Charts = {
             grid: {
               color: 'rgba(0, 59, 0, 0.2)',
               drawBorder: true,
-              borderColor: '#003B00'
+              borderColor: greenDark
             },
             ticks: {
-              color: '#008F11',
-              font: { family: "'Courier New', monospace", size: 10 },
+              color: greenDim,
+              font: { family: fontFamily, size: 10 },
               callback: (v) => '$' + Utils.fmt(v)
             }
           }

@@ -38,7 +38,16 @@ const App = {
 
   /** Initialize app */
   async init() {
-    // No API key needed — using Yahoo Finance (free, all markets) + CoinGecko (crypto)
+    // ── Init theme engine BEFORE anything visual ──
+    ThemeEngine.init();
+    this._renderThemeSwitcher();
+
+    // Listen for theme changes to re-render charts (colours may differ)
+    window.addEventListener('themechange', () => {
+      this._renderThemeSwitcher();
+      this.renderPieChart();
+      this.renderLineChart();
+    });
 
     // Boot animation
     await this._bootSequence();
@@ -63,6 +72,30 @@ const App = {
     // API key is embedded, always refresh
     await this.refreshPrices();
     this.startAutoRefresh();
+  },
+
+  // ── THEME SWITCHER ──────────────────────────────────────────────
+
+  /** Render the theme switcher buttons */
+  _renderThemeSwitcher() {
+    const container = document.getElementById('themeOptions');
+    if (!container) return;
+
+    const themes = ThemeEngine.list();
+    const current = ThemeEngine.current();
+
+    container.innerHTML = themes.map(id => {
+      const active = id === current ? ' active' : '';
+      // Format: "hacker-terminal" → "HACKER TERMINAL"
+      const label = id.replace(/-/g, ' ').toUpperCase();
+      return `<button class="theme-btn${active}" data-theme="${id}" onclick="App._switchTheme('${id}')">[${label}]</button>`;
+    }).join('');
+  },
+
+  /** Switch theme (called by button onclick) */
+  _switchTheme(name) {
+    ThemeEngine.apply(name);
+    // The 'themechange' event listener in init() handles re-render
   },
 
   /** Bind all event listeners */

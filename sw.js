@@ -1,5 +1,5 @@
 // Service Worker — Drew-Sop PWA
-const CACHE_NAME = 'drew-sop-v15';
+const CACHE_NAME = 'drew-sop-v16';
 const BASE = '/drew-sop/';
 
 // Install — skip waiting so new SW activates immediately
