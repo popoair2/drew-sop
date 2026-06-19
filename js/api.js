@@ -46,8 +46,8 @@ const API = {
         const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
         if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
         const data = await res.json();
-        // Validate it looks like Yahoo response
-        if (data && data.chart) {
+        // Validate it looks like a Yahoo response (chart OR search)
+        if (data && (data.chart || data.quotes || data.ResultSet)) {
           console.log('CORS proxy #' + (i + 1) + ' succeeded:', this.CORS_PROXIES[i]);
           return data;
         }
