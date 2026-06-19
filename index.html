@@ -121,14 +121,14 @@
     <div class="modal">
       <h2 class="modal-title" id="modalAssetTitle">add_asset</h2>
       <form id="formAsset">
-        <div class="form-group">
-          <label>ticker_symbol</label>
-          <input type="text" id="inputSymbol" placeholder="e.g. AAPL, 0700.HK, BTC" required>
-        </div>
         <div class="form-group form-group-search">
-          <label>display_name</label>
-          <input type="text" id="inputName" placeholder="search or enter name…" required autocomplete="off">
+          <label>ticker_symbol</label>
+          <input type="text" id="inputSymbol" placeholder="e.g. AAPL, 0700.HK, BTC" required autocomplete="off">
           <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>display_name</label>
+          <input type="text" id="inputName" placeholder="auto-filled or enter manually…" required autocomplete="off">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -199,10 +199,10 @@
 
 </div><!-- /terminal-frame -->
 
-  <!-- Version: 16 — theme system -->
+  <!-- Version: 17 — search on symbol input -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=16').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=17').then(reg => {
         reg.update();
       }).catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -215,11 +215,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=16"></script>
-  <script src="js/themes.js?v=16"></script>
-  <script src="js/storage.js?v=16"></script>
-  <script src="js/api.js?v=16"></script>
-  <script src="js/charts.js?v=16"></script>
-  <script src="js/app.js?v=16"></script>
+  <script src="js/utils.js?v=17"></script>
+  <script src="js/themes.js?v=17"></script>
+  <script src="js/storage.js?v=17"></script>
+  <script src="js/api.js?v=17"></script>
+  <script src="js/charts.js?v=17"></script>
+  <script src="js/app.js?v=17"></script>
 </body>
 </html>

@@ -63,33 +63,59 @@ const API = {
   /** Search Yahoo Finance for symbols (stocks + ETFs) */
   async searchYahoo(query) {
     if (!query || query.length < 1) return [];
-    try {
-      const data = await this.yahooFetch('/v1/finance/search?q=' + encodeURIComponent(query) + '&quotesCount=10&newsCount=0');
-      const quotes = data && data.quotes ? data.quotes : [];
-      const out = [];
-      for (let i = 0; i < Math.min(quotes.length, 12); i++) {
-        const q = quotes[i];
-        const sym = q.symbol || '';
-        if (!sym) continue;
-        const isHK = sym.endsWith('.HK');
-        const isETF = (q.quoteType || '').toUpperCase() === 'ETF' || (q.shortname || '').toUpperCase().indexOf('ETF') !== -1;
-        const isCrypto = (q.quoteType || '').toUpperCase() === 'CRYPTOCURRENCY' || sym.indexOf('-') !== -1;
-        let type = 'us_stock';
-        if (isCrypto) type = 'crypto';
-        else if (isHK && isETF) type = 'hk_etf';
-        else if (isHK) type = 'hk_stock';
-        else if (isETF) type = 'etf';
-        out.push({ symbol: sym, name: q.shortname || q.longname || sym, type: type });
+    // Try multiple endpoints — v1/finance/search first, then v6/finance/autocomplete as fallback
+    const endpoints = [
+      '/v1/finance/search?q=' + encodeURIComponent(query) + '&quotesCount=10&newsCount=0',
+      '/v6/finance/autocomplete?query=' + encodeURIComponent(query) + '&lang=en-US&region=US',
+    ];
+    for (const path of endpoints) {
+      try {
+        const data = await this.yahooFetch(path);
+        const out = [];
+        // v1 format: data.quotes[]
+        if (data && data.quotes && data.quotes.length > 0) {
+          for (let i = 0; i < Math.min(data.quotes.length, 12); i++) {
+            const q = data.quotes[i];
+            const sym = q.symbol || '';
+            if (!sym) continue;
+            const isHK = sym.endsWith('.HK');
+            const isETF = (q.quoteType || '').toUpperCase() === 'ETF' || (q.shortname || '').toUpperCase().indexOf('ETF') !== -1;
+            const isCrypto = (q.quoteType || '').toUpperCase() === 'CRYPTOCURRENCY' || sym.indexOf('-') !== -1;
+            let type = 'us_stock';
+            if (isCrypto) type = 'crypto';
+            else if (isHK && isETF) type = 'hk_etf';
+            else if (isHK) type = 'hk_stock';
+            else if (isETF) type = 'etf';
+            out.push({ symbol: sym, name: q.shortname || q.longname || sym, type: type });
+          }
+          if (out.length > 0) return out;
+        }
+        // v6 format: data.ResultSet.Result[]
+        if (data && data.ResultSet && data.ResultSet.Result && data.ResultSet.Result.length > 0) {
+          for (let i = 0; i < Math.min(data.ResultSet.Result.length, 12); i++) {
+            const r = data.ResultSet.Result[i];
+            const sym = r.symbol || '';
+            if (!sym) continue;
+            const isHK = sym.endsWith('.HK');
+            const isETF = (r.typeDisp || '').toUpperCase() === 'ETF' || (r.name || '').toUpperCase().indexOf('ETF') !== -1;
+            let type = 'us_stock';
+            if (isHK && isETF) type = 'hk_etf';
+            else if (isHK) type = 'hk_stock';
+            else if (isETF) type = 'etf';
+            out.push({ symbol: sym, name: r.name || sym, type: type });
+          }
+          if (out.length > 0) return out;
+        }
+      } catch (e) {
+        console.warn('Yahoo search endpoint failed:', path, e.message);
       }
-      return out;
-    } catch (e) {
-      return [];
     }
+    return [];
   },
 
   /** Search CoinGecko for crypto */
   async searchCrypto(query) {
-    if (!query || query.length < 2) return [];
+    if (!query || query.length < 1) return [];
     try {
       const url = 'https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(query);
       const res = await fetch(url, { signal: AbortSignal.timeout(3000) });

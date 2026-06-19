@@ -105,8 +105,8 @@ const App = {
     document.getElementById('formAsset').addEventListener('submit', (e) => { e.preventDefault(); this.saveAsset(); });
     document.getElementById('btnRefreshPrices').addEventListener('click', () => this.refreshPrices());
 
-    // Search dropdown — debounce input on name field
-    const nameInput = document.getElementById('inputName');
+    // Search dropdown — debounce input on SYMBOL field (not name)
+    const symInput = document.getElementById('inputSymbol');
     const searchDD = document.getElementById('searchDropdown');
     this._searchDebounced = Utils.debounce(async (q) => {
       if (!q || q.length < 1) { searchDD.innerHTML = ''; searchDD.style.display = 'none'; return; }
@@ -133,8 +133,8 @@ const App = {
         searchDD.innerHTML = `<div class="search-empty">搜尋錯誤: ${e.message}</div>`;
       }
     }, 350);
-    nameInput.addEventListener('input', (e) => this._searchDebounced(e.target.value.trim()));
-    nameInput.addEventListener('focus', (e) => {
+    symInput.addEventListener('input', (e) => this._searchDebounced(e.target.value.trim()));
+    symInput.addEventListener('focus', (e) => {
       if (searchDD.innerHTML) searchDD.style.display = 'block';
     });
     searchDD.addEventListener('click', (e) => {
@@ -143,7 +143,7 @@ const App = {
       const symbol = item.dataset.symbol;
       const name = item.dataset.name;
       const type = item.dataset.type;
-      document.getElementById('inputSymbol').value = symbol;
+      symInput.value = symbol;
       document.getElementById('inputName').value = name;
       // Auto-set type if matching
       const typeSelect = document.getElementById('inputType');
