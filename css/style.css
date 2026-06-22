@@ -1254,3 +1254,121 @@ body::after {
     font-size: 0.6rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART HOME THEME — Dashboard-style overrides
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="smart-home"] .bento-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="smart-home"] .bento-card .card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+[data-theme="smart-home"] .bento-card .card-title::before {
+  content: '';
+}
+
+[data-theme="smart-home"] .card-status {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--green-bright);
+}
+
+[data-theme="smart-home"] .card-status .status-dot {
+  border-radius: 50%;
+  animation: none;
+  box-shadow: 0 0 6px var(--green-glow-strong);
+}
+
+[data-theme="smart-home"] .header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+[data-theme="smart-home"] .total-value-line .value {
+  text-shadow: none;
+  font-weight: 600;
+}
+
+[data-theme="smart-home"] .change-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+[data-theme="smart-home"] .btn-pill {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 8px 18px;
+}
+
+[data-theme="smart-home"] .btn-pill.btn-primary {
+  background: var(--green-bright);
+  color: var(--bg);
+  border-color: var(--green-bright);
+}
+
+[data-theme="smart-home"] .btn-pill.btn-primary:hover {
+  background: var(--green);
+  box-shadow: 0 4px 12px var(--green-glow);
+}
+
+[data-theme="smart-home"] .asset-table th {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="smart-home"] .asset-table td {
+  border-bottom: 1px solid var(--border-dim);
+}
+
+[data-theme="smart-home"] .asset-table td.symbol {
+  font-weight: 600;
+}
+
+[data-theme="smart-home"] .category-header h3::before,
+[data-theme="smart-home"] .category-header h3::after {
+  content: '';
+}
+
+[data-theme="smart-home"] .category-header h3 {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="smart-home"] .modal {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="smart-home"] .modal::before {
+  content: '';
+}
+
+[data-theme="smart-home"] .theme-switcher-label::before {
+  content: '';
+}
+
+[data-theme="smart-home"] .form-group label::before {
+  content: '';
+}
+
+[data-theme="smart-home"] .modal-title::before {
+  content: '';
+}
+
+[data-theme="smart-home"] .period-btn {
+  font-weight: 600;
+  border-radius: var(--radius);
+}
+
+[data-theme="smart-home"] .period-btn.active {
+  background: var(--green-bright);
+  color: var(--bg);
+  border-color: var(--green-bright);
+}
