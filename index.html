@@ -80,7 +80,6 @@
       <div class="card-status"><span class="status-dot"></span> LIVE</div>
       <h2 class="card-title">資產走勢 // HISTORY</h2>
       <div class="period-switcher">
-        <button class="period-btn" data-period="day" onclick="App.setPeriod('day')">1D</button>
         <button class="period-btn active" data-period="month" onclick="App.setPeriod('month')">1M</button>
         <button class="period-btn" data-period="year" onclick="App.setPeriod('year')">1Y</button>
       </div>
@@ -199,10 +198,10 @@
 
 </div><!-- /terminal-frame -->
 
-  <!-- Version: 21 — grid layout 1/3 + 2/3 -->
+  <!-- Version: 22 — line chart 1M daily + 1Y monthly -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=21').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=22').then(reg => {
         reg.update();
       }).catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -215,11 +214,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=21"></script>
-  <script src="js/themes.js?v=21"></script>
-  <script src="js/storage.js?v=21"></script>
-  <script src="js/api.js?v=21"></script>
-  <script src="js/charts.js?v=21"></script>
-  <script src="js/app.js?v=21"></script>
+  <script src="js/utils.js?v=22"></script>
+  <script src="js/themes.js?v=22"></script>
+  <script src="js/storage.js?v=22"></script>
+  <script src="js/api.js?v=22"></script>
+  <script src="js/charts.js?v=22"></script>
+  <script src="js/app.js?v=22"></script>
 </body>
 </html>

@@ -181,10 +181,7 @@ const Charts = {
 
     // Handle empty snapshots
     if (!snapshots || snapshots.length === 0) {
-      if (this.lineChart) {
-        this.lineChart.destroy();
-        this.lineChart = null;
-      }
+      if (this.lineChart) { this.lineChart.destroy(); this.lineChart = null; }
       ctx.save();
       ctx.fillStyle = greenDim;
       ctx.font = "700 12px " + fontFamily;
@@ -198,24 +195,41 @@ const Charts = {
     // Filter snapshots based on period
     const now = new Date();
     let cutoff = new Date();
-    if (period === 'day') {
-      cutoff.setDate(now.getDate() - 1);
-    } else if (period === 'month') {
+    let labels, data;
+
+    if (period === 'month') {
+      // 1M: daily data for past 30 days
       cutoff.setMonth(now.getMonth() - 1);
-    } else if (period === 'year') {
+      const filtered = snapshots.filter(s => new Date(s.created_at) >= cutoff);
+      labels = filtered.map(s => { const d = new Date(s.created_at); return `${d.getMonth()+1}/${d.getDate()}`; });
+      data   = filtered.map(s => s.total_value_hkd);
+    } else {
+      // 1Y: monthly aggregated data for past 12 months
       cutoff.setFullYear(now.getFullYear() - 1);
+      cutoff.setMonth(cutoff.getMonth() - 1); // include 12 full months back
+      const filtered = snapshots.filter(s => new Date(s.created_at) >= cutoff);
+
+      // Group by year-month, take last snapshot of each month
+      const monthly = {};
+      for (const s of filtered) {
+        const d = new Date(s.created_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        monthly[key] = s.total_value_hkd; // overwrite → keeps last entry per month
+      }
+
+      // Build sorted 12-month array (oldest → newest)
+      labels = [];
+      data   = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        labels.push(key); // YYYY-MM format
+        data.push(monthly[key] || null); // null if no data for that month
+      }
     }
 
-    const filtered = snapshots.filter(s => {
-      const d = new Date(s.created_at);
-      return d >= cutoff;
-    });
-
-    if (filtered.length === 0) {
-      if (this.lineChart) {
-        this.lineChart.destroy();
-        this.lineChart = null;
-      }
+    if (data.length === 0) {
+      if (this.lineChart) { this.lineChart.destroy(); this.lineChart = null; }
       ctx.save();
       ctx.fillStyle = greenDim;
       ctx.font = "700 12px " + fontFamily;
@@ -225,12 +239,6 @@ const Charts = {
       ctx.restore();
       return;
     }
-
-    const labels = filtered.map(s => {
-      const d = new Date(s.created_at);
-      return `${d.getMonth() + 1}/${d.getDate()}`;
-    });
-    const data = filtered.map(s => s.total_value_hkd);
 
     if (this.lineChart) {
       this.lineChart.destroy();
@@ -255,7 +263,8 @@ const Charts = {
           pointHoverBorderColor: '#000000',
           pointHoverBorderWidth: 2,
           pointBackgroundColor: greenBright,
-          pointBorderColor: '#000000'
+          pointBorderColor: '#000000',
+          spanGaps: true,
         }]
       },
       options: {
@@ -280,7 +289,7 @@ const Charts = {
             displayColors: false,
             callbacks: {
               title: (items) => `[ ${items[0].label} ]`,
-              label: (ctx) => ` HK$${Utils.fmt(ctx.parsed.y)}`
+              label: (ctx) => ctx.parsed.y != null ? ` HK$${Utils.fmt(ctx.parsed.y)}` : ' NO DATA'
             }
           }
         },
@@ -293,8 +302,7 @@ const Charts = {
             },
             ticks: {
               color: greenDim,
-              font: { family: fontFamily, size: 10 },
-              maxTicksLimit: 8
+              font: { family: fontFamily, size: 10 }
             }
           },
           y: {
