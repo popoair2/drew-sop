@@ -462,7 +462,7 @@ const App = {
       return;
     }
     const catValues = {};
-    this.categories.forEach(cat => { catValues[cat.id] = { name: cat.name, color: cat.color, value: 0, weightedYield: 0, yieldWeight: 0 }; });
+    this.categories.forEach(cat => { catValues[cat.id] = { name: cat.name, color: cat.color, value: 0, weightedYield: 0 }; });
     this.assets.forEach(asset => {
       const p = this.prices[asset.id];
       if (!p) return;
@@ -473,7 +473,6 @@ const App = {
         const y = this.dividendYields[asset.id];
         if (y != null && y > 0) {
           catValues[asset.category].weightedYield += y * value;
-          catValues[asset.category].yieldWeight += value;
         }
       }
     });
@@ -488,8 +487,8 @@ const App = {
       legendEl.innerHTML = data.map(c => {
         const pct = total > 0 ? ((c.value / total) * 100).toFixed(1) : '0.0';
         let yieldStr = '';
-        if (c.yieldWeight > 0) {
-          const avgYield = c.weightedYield / c.yieldWeight;
+        if (c.value > 0 && c.weightedYield > 0) {
+          const avgYield = c.weightedYield / c.value;
           yieldStr = ` <span class="legend-yield">DY:${avgYield.toFixed(2)}%</span>`;
         }
         return `

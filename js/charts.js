@@ -55,10 +55,10 @@ const Charts = {
       const fillClass = pct > 30 ? 'high' : (pct > 10 ? 'mid' : '');
       const barColor = cat.color || '#00FF41';
 
-      // Weighted avg dividend yield
+      // Weighted avg dividend yield (weighted by ALL assets in category, not just yielding ones)
       let yieldStr = '';
-      if (cat.yieldWeight > 0) {
-        const avgYield = cat.weightedYield / cat.yieldWeight;
+      if (cat.value > 0 && cat.weightedYield > 0) {
+        const avgYield = cat.weightedYield / cat.value;
         yieldStr = ` <span class="legend-yield">DY:${avgYield.toFixed(2)}%</span>`;
       }
 
