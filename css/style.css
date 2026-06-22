@@ -331,9 +331,13 @@ body::after {
 }
 
 .card-pie canvas {
-  flex: 1;
   width: 100% !important;
-  min-height: 200px;
+  height: auto !important;
+  max-width: 300px;
+  max-height: 300px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  display: block;
 }
 
 .card-line {
