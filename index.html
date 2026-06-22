@@ -70,7 +70,7 @@
     <div class="bento-card card-pie">
       <div class="card-status"><span class="status-dot"></span> LIVE</div>
       <h2 class="card-title">持倉分佈 // ALLOCATION</h2>
-      <div id="cliBarChart" class="cli-bar-chart"></div>
+      <canvas id="pieChart"></canvas>
       <hr class="sep">
       <div class="category-legend" id="categoryLegend"></div>
     </div>
@@ -199,10 +199,10 @@
 
 </div><!-- /terminal-frame -->
 
-  <!-- Version: 18 — fix category DY weighted avg -->
+  <!-- Version: 19 — pie chart for allocation -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=18').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=19').then(reg => {
         reg.update();
       }).catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -215,11 +215,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=18"></script>
-  <script src="js/themes.js?v=18"></script>
-  <script src="js/storage.js?v=18"></script>
-  <script src="js/api.js?v=18"></script>
-  <script src="js/charts.js?v=18"></script>
-  <script src="js/app.js?v=18"></script>
+  <script src="js/utils.js?v=19"></script>
+  <script src="js/themes.js?v=19"></script>
+  <script src="js/storage.js?v=19"></script>
+  <script src="js/api.js?v=19"></script>
+  <script src="js/charts.js?v=19"></script>
+  <script src="js/app.js?v=19"></script>
 </body>
 </html>

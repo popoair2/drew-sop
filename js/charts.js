@@ -1,5 +1,5 @@
 /**
- * charts.js — Chart.js wrappers for line chart + CLI bar chart for allocation
+ * charts.js — Chart.js wrappers for line chart + pie chart for allocation
  */
 
 const Charts = {
@@ -28,6 +28,94 @@ const Charts = {
    */
   _css(prop) {
     return getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+  },
+
+  /**
+   * Render pie/doughnut chart for category allocation
+   * categoryData: [{ name, color, value, weightedYield }]
+   */
+  renderPie(canvasId, categoryData) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Read theme-aware colours from CSS
+    const greenBright = this._css('--green-bright') || '#00FF41';
+    const greenDim    = this._css('--green-dim')    || '#008F11';
+    const bgCard      = this._css('--bg-card')      || '#0A0A0A';
+    const fontFamily  = this._css('--font')         || "'Courier New', monospace";
+    const radius      = parseInt(this._css('--radius')) || 0;
+
+    const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+
+    if (total === 0 || categoryData.length === 0) {
+      if (this.pieChart) {
+        this.pieChart.destroy();
+        this.pieChart = null;
+      }
+      ctx.save();
+      ctx.fillStyle = greenDim;
+      ctx.font = "700 12px " + fontFamily;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.5;
+      ctx.fillText('[ NO ALLOCATION DATA ]', canvas.width / 2, canvas.height / 2);
+      ctx.restore();
+      return;
+    }
+
+    // Sort by value descending
+    const sorted = [...categoryData].sort((a, b) => b.value - a.value);
+
+    const labels = sorted.map(c => c.name);
+    const data   = sorted.map(c => c.value);
+    const colors = sorted.map(c => c.color || '#00FF41');
+
+    if (this.pieChart) {
+      this.pieChart.destroy();
+    }
+
+    this.pieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors,
+          borderColor: bgCard,
+          borderWidth: 2,
+          hoverBorderWidth: 3,
+          hoverBorderColor: greenBright,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: bgCard,
+            titleColor: greenBright,
+            bodyColor: greenBright,
+            borderColor: greenBright,
+            borderWidth: 1,
+            cornerRadius: radius,
+            padding: 10,
+            titleFont: { family: fontFamily, size: 11 },
+            bodyFont: { family: fontFamily, size: 12 },
+            displayColors: true,
+            callbacks: {
+              title: (items) => `[ ${items[0].label} ]`,
+              label: (ctx) => {
+                const val = ctx.parsed;
+                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                return ` HK$${Utils.fmtVal(val)} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
   },
 
   /**

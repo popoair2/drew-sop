@@ -454,9 +454,12 @@ const App = {
   },
 
   renderPieChart() {
-    const container = document.getElementById('cliBarChart');
+    const canvas = document.getElementById('pieChart');
     if (this.assets.length === 0) {
-      if (container) container.innerHTML = '<div class="empty-state">no assets loaded<br>run: ./add_asset.sh</div>';
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
       const legendEl = document.getElementById('categoryLegend');
       if (legendEl) legendEl.innerHTML = '';
       return;
@@ -477,8 +480,8 @@ const App = {
       }
     });
     const data = Object.values(catValues).filter(c => c.value > 0);
-    if (data.length > 0 && container) {
-      Charts.renderCliBar('cliBarChart', data);
+    if (data.length > 0 && canvas) {
+      Charts.renderPie('pieChart', data);
     }
     // Legend
     const legendEl = document.getElementById('categoryLegend');
