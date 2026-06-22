@@ -370,6 +370,14 @@ const ThemeEngine = {
       root.style.setProperty(prop, value);
     }
 
+    // Toggle smart-home specific DOM elements
+    const isSmart = (name === 'smart-home');
+    document.getElementById('headerTerminal').style.display = isSmart ? 'none' : '';
+    document.getElementById('headerSmart').style.display = isSmart ? '' : 'none';
+    document.getElementById('changeBarTerminal').style.display = isSmart ? 'none' : '';
+    document.getElementById('changeBarSmart').style.display = isSmart ? '' : 'none';
+    document.getElementById('shBottomNav').style.display = isSmart ? '' : 'none';
+
     // Persist
     try {
       localStorage.setItem(this.STORAGE_KEY, name);

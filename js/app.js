@@ -100,7 +100,11 @@ const App = {
 
   /** Bind all event listeners */
   bindEvents() {
-    document.getElementById('btnAddAsset').addEventListener('click', () => this.openAssetModal());
+    // Add asset buttons (both themes)
+    const addTerminal = document.getElementById('btnAddAssetTerminal');
+    const addSmart = document.getElementById('btnAddAssetSmart');
+    if (addTerminal) addTerminal.addEventListener('click', () => this.openAssetModal());
+    if (addSmart) addSmart.addEventListener('click', () => this.openAssetModal());
     document.getElementById('btnCancelAsset').addEventListener('click', () => this.closeModal('modalAsset'));
     document.getElementById('formAsset').addEventListener('submit', (e) => { e.preventDefault(); this.saveAsset(); });
     document.getElementById('btnRefreshPrices').addEventListener('click', () => this.refreshPrices());
@@ -344,35 +348,42 @@ const App = {
 
   renderTotalValue() {
     const total = this.calcTotalValue();
-    const el = document.getElementById('totalValue');
-    el.textContent = this.assets.length > 0
-      ? '$' + Utils.fmt(total)
-      : '—';
+    const val = this.assets.length > 0 ? '$' + Utils.fmt(total) : '—';
+    const elT = document.getElementById('totalValueTerminal');
+    const elS = document.getElementById('totalValueSmart');
+    if (elT) elT.textContent = val;
+    if (elS) elS.textContent = val;
   },
 
   renderChangeBar() {
     const current = this.calcTotalValue();
     const periods = [
-      { id: 'changeDay', days: 1 },
-      { id: 'changeMonth', days: 30 },
-      { id: 'changeYear', days: 365 }
+      { idT: 'changeDayTerminal', idS: 'changeDaySmart', days: 1 },
+      { idT: 'changeMonthTerminal', idS: 'changeMonthSmart', days: 30 },
+      { idT: 'changeYearTerminal', idS: 'changeYearSmart', days: 365 }
     ];
     for (const p of periods) {
-      const el = document.getElementById(p.id);
+      const elT = document.getElementById(p.idT);
+      const elS = document.getElementById(p.idS);
       const snap = Storage.getSnapshotDaysAgo(p.days);
       if (snap && current > 0 && snap.totalValueHKD > 0) {
         const diff = current - snap.totalValueHKD;
         const pct = (diff / snap.totalValueHKD) * 100;
-        el.textContent = Utils.fmtChange(diff, pct);
-        el.className = 'change-value ' + (diff >= 0 ? 'positive' : 'negative');
+        const text = Utils.fmtChange(diff, pct);
+        const cls = 'change-value ' + (diff >= 0 ? 'positive' : 'negative');
+        if (elT) { elT.textContent = text; elT.className = cls; }
+        if (elS) { elS.textContent = text; elS.className = 'sh-stat-value ' + (diff >= 0 ? 'positive' : 'negative'); }
       } else {
-        el.textContent = '—';
-        el.className = 'change-value';
+        if (elT) { elT.textContent = '—'; elT.className = 'change-value'; }
+        if (elS) { elS.textContent = '—'; elS.className = 'sh-stat-value'; }
       }
     }
     const now = new Date();
-    document.getElementById('lastUpdate').textContent =
-      `updated: ${now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })} UTC+8`;
+    const timeStr = `updated: ${now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })} UTC+8`;
+    const luT = document.getElementById('lastUpdateTerminal');
+    const luS = document.getElementById('lastUpdateSmart');
+    if (luT) luT.textContent = timeStr;
+    if (luS) luS.textContent = timeStr;
   },
 
   renderAssetList() {

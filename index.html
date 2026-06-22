@@ -16,7 +16,7 @@
 </head>
 <body>
 
-<div class="terminal-frame">
+<div class="terminal-frame" id="terminalFrame">
 
   <!-- PULL-TO-REFRESH INDICATOR -->
   <div id="pullIndicator" class="pull-indicator">
@@ -26,8 +26,10 @@
   <!-- BOOT SEQUENCE -->
   <div id="bootSequence" class="boot-sequence"></div>
 
-  <!-- HEADER -->
-  <header class="header">
+  <!-- ═══════════════════════════════════════════════════════════════
+       HACKER TERMINAL HEADER (default theme)
+       ═══════════════════════════════════════════════════════════════ -->
+  <header class="header" id="headerTerminal">
     <div class="header-line">
       <div class="terminal-prompt">
         <span class="prompt-user">root</span>@<span class="prompt-host">drew-sop</span>:<span style="color:var(--text-dim)">~#</span>
@@ -37,37 +39,84 @@
       <div class="header-status">
         <div class="total-value-line">
           <span class="label">TOTAL_ASSET_VALUE_HKD</span>
-          <span class="value" id="totalValue">—</span>
+          <span class="value" id="totalValueTerminal">—</span>
         </div>
-        <button class="btn-pill btn-primary" id="btnAddAsset">+ add_asset</button>
+        <button class="btn-pill btn-primary" id="btnAddAssetTerminal">+ add_asset</button>
       </div>
     </div>
   </header>
 
-  <!-- CHANGE BAR -->
-  <section class="change-bar" id="changeBar">
+  <!-- ═══════════════════════════════════════════════════════════════
+       SMART HOME HEADER
+       ═══════════════════════════════════════════════════════════════ -->
+  <header class="header" id="headerSmart" style="display:none">
+    <div class="sh-header-inner">
+      <div class="sh-brand">
+        <div class="sh-brand-icon">◈</div>
+        <div class="sh-brand-text">
+          <span class="sh-brand-name">DREW-SOP</span>
+          <span class="sh-brand-sub">Asset Dashboard</span>
+        </div>
+      </div>
+      <div class="sh-header-right">
+        <div class="sh-total-value">
+          <span class="sh-total-label">總資產</span>
+          <span class="sh-total-amount" id="totalValueSmart">—</span>
+        </div>
+        <button class="sh-btn-primary" id="btnAddAssetSmart">+ 新增資產</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HACKER TERMINAL CHANGE BAR
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="change-bar" id="changeBarTerminal">
     <div class="change-item">
       <span class="change-label">1D</span>
-      <span class="change-value" id="changeDay">—</span>
+      <span class="change-value" id="changeDayTerminal">—</span>
     </div>
     <div class="change-item">
       <span class="change-label">1M</span>
-      <span class="change-value" id="changeMonth">—</span>
+      <span class="change-value" id="changeMonthTerminal">—</span>
     </div>
     <div class="change-item">
       <span class="change-label">1Y</span>
-      <span class="change-value" id="changeYear">—</span>
+      <span class="change-value" id="changeYearTerminal">—</span>
     </div>
     <div class="last-update">
-      <span id="lastUpdate">waiting for data...</span>
+      <span id="lastUpdateTerminal">waiting for data...</span>
     </div>
   </section>
 
-  <!-- BENTO GRID -->
-  <main class="bento-grid">
+  <!-- ═══════════════════════════════════════════════════════════════
+       SMART HOME STATS ROW
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="sh-stats-row" id="changeBarSmart" style="display:none">
+    <div class="sh-stat">
+      <span class="sh-stat-label">日變動</span>
+      <span class="sh-stat-value" id="changeDaySmart">—</span>
+    </div>
+    <div class="sh-stat">
+      <span class="sh-stat-label">月變動</span>
+      <span class="sh-stat-value" id="changeMonthSmart">—</span>
+    </div>
+    <div class="sh-stat">
+      <span class="sh-stat-label">年變動</span>
+      <span class="sh-stat-value" id="changeYearSmart">—</span>
+    </div>
+    <div class="sh-stat-last-update">
+      <span id="lastUpdateSmart">—</span>
+    </div>
+  </section>
 
-    <!-- PIE CHART CARD → NOW CLI BAR CHART -->
-    <div class="bento-card card-pie">
+  <!-- ═══════════════════════════════════════════════════════════════
+       BENTO GRID (shared by all themes)
+       ═══════════════════════════════════════════════════════════════ -->
+  <main class="bento-grid" id="bentoGrid">
+
+    <!-- PIE CHART CARD -->
+    <div class="bento-card card-pie" id="cardPie">
       <div class="card-status"><span class="status-dot"></span> LIVE</div>
       <h2 class="card-title">持倉分佈 // ALLOCATION</h2>
       <canvas id="pieChart"></canvas>
@@ -76,7 +125,7 @@
     </div>
 
     <!-- LINE CHART CARD -->
-    <div class="bento-card card-line">
+    <div class="bento-card card-line" id="cardLine">
       <div class="card-status"><span class="status-dot"></span> LIVE</div>
       <h2 class="card-title">資產走勢 // HISTORY</h2>
       <div class="period-switcher">
@@ -96,17 +145,13 @@
     </div>
 
     <!-- SETTINGS CARD -->
-    <div class="bento-card card-settings">
+    <div class="bento-card card-settings" id="cardSettings">
       <h2 class="card-title">系統管理 // SYSADMIN</h2>
-
-      <!-- THEME SWITCHER -->
       <div class="theme-switcher">
         <div class="theme-switcher-label">ui_theme</div>
         <div class="theme-options" id="themeOptions"></div>
       </div>
-
       <hr class="sep">
-
       <div class="settings-group">
         <button class="btn-pill" id="btnManageCategories">manage_categories</button>
         <button class="btn-pill" id="btnRefreshPrices">force_refresh</button>
@@ -114,6 +159,24 @@
     </div>
 
   </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SMART HOME BOTTOM NAV
+       ═══════════════════════════════════════════════════════════════ -->
+  <nav class="sh-bottom-nav" id="shBottomNav" style="display:none">
+    <button class="sh-nav-item active" data-nav="dashboard">
+      <span class="sh-nav-icon">◈</span>
+      <span class="sh-nav-label">Dashboard</span>
+    </button>
+    <button class="sh-nav-item" data-nav="assets">
+      <span class="sh-nav-icon">≡</span>
+      <span class="sh-nav-label">資產</span>
+    </button>
+    <button class="sh-nav-item" data-nav="settings">
+      <span class="sh-nav-icon">⚙</span>
+      <span class="sh-nav-label">設定</span>
+    </button>
+  </nav>
 
   <!-- MODAL: ADD/EDIT ASSET -->
   <div class="modal-overlay" id="modalAsset">
@@ -198,10 +261,10 @@
 
 </div><!-- /terminal-frame -->
 
-  <!-- Version: 23 — smart-home theme -->
+  <!-- Version: 24 — smart-home full layout redesign -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/drew-sop/sw.js?v=23').then(reg => {
+      navigator.serviceWorker.register('/drew-sop/sw.js?v=24').then(reg => {
         reg.update();
       }).catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -214,11 +277,11 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="js/utils.js?v=23"></script>
-  <script src="js/themes.js?v=23"></script>
-  <script src="js/storage.js?v=23"></script>
-  <script src="js/api.js?v=23"></script>
-  <script src="js/charts.js?v=23"></script>
-  <script src="js/app.js?v=23"></script>
+  <script src="js/utils.js?v=24"></script>
+  <script src="js/themes.js?v=24"></script>
+  <script src="js/storage.js?v=24"></script>
+  <script src="js/api.js?v=24"></script>
+  <script src="js/charts.js?v=24"></script>
+  <script src="js/app.js?v=24"></script>
 </body>
 </html>

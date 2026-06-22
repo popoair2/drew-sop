@@ -1372,3 +1372,217 @@ body::after {
   color: var(--bg);
   border-color: var(--green-bright);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART HOME — Header
+   ═══════════════════════════════════════════════════════════════ */
+.sh-header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sh-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sh-brand-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--green-bright);
+  color: var(--bg);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.sh-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sh-brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.sh-brand-sub {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.sh-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.sh-total-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.sh-total-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sh-total-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sh-btn-primary {
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--green-bright);
+  color: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sh-btn-primary:hover {
+  background: var(--green);
+  box-shadow: 0 4px 12px var(--green-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART HOME — Stats Row
+   ═══════════════════════════════════════════════════════════════ */
+.sh-stats-row {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.sh-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sh-stat-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sh-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sh-stat-value.positive {
+  color: var(--green-bright);
+}
+
+.sh-stat-value.negative {
+  color: var(--err);
+}
+
+.sh-stat-last-update {
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART HOME — Bottom Nav
+   ═══════════════════════════════════════════════════════════════ */
+.sh-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 8px 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.sh-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  color: var(--text-dim);
+  transition: color 0.15s ease;
+}
+
+.sh-nav-item.active {
+  color: var(--green-bright);
+}
+
+.sh-nav-icon {
+  font-size: 1.2rem;
+}
+
+.sh-nav-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Add padding bottom for bottom nav */
+[data-theme="smart-home"] .terminal-frame {
+  padding-bottom: 70px;
+}
+
+/* Smart home card title styling */
+[data-theme="smart-home"] .card-pie .card-title,
+[data-theme="smart-home"] .card-line .card-title,
+[data-theme="smart-home"] .card-assets .card-title,
+[data-theme="smart-home"] .card-settings .card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Smart home — larger total value in header */
+[data-theme="smart-home"] .sh-total-amount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--green-bright);
+}
